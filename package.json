@@ -1,0 +1,19 @@
+{
+  "name": "rpg-yaml",
+  "version": "1.0.0",
+  "repository": "https://github.com/rpg-apps/rpg-yaml",
+  "private": true,
+  "dependencies": {
+    "change-case": "^4.1.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.4",
+    "babel-jest": "^27.1.0",
+    "jest": "^27.1.0",
+    "shallow-equal": "^1.2.1"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
