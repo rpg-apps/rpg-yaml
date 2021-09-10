@@ -73,6 +73,10 @@ describe('MechanismParser', () => {
       expectChoiceToBe(mechanism.choices[2], { name: FIELD_CHOICE_NAME, playbook: ALL_PLAYBOOK }, ({ from, free }) => from === FIELD_CHOICE_FROM && !free)
     })
   })
+
+  describe('effect parsing', () => {
+    
+  })
 })
 
 function expectChoiceToBe (choice, { name, playbook }, typeTest) {

@@ -4,7 +4,9 @@
   "repository": "https://github.com/rpg-apps/rpg-yaml",
   "private": true,
   "dependencies": {
-    "change-case": "^4.1.2"
+    "axios": "^0.21.4",
+    "change-case": "^4.1.2",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@babel/core": "^7.15.5",
@@ -14,6 +16,6 @@
     "shallow-equal": "^1.2.1"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest --colors --coverage"
   }
 }
