@@ -1,4 +1,4 @@
-import { Flag, parseEntries } from '../parsing-utils'
+import { Flag, parseEntries, ParsingError } from '../parsing-utils'
 import MechanismFieldParser from './mechanism_field_parser'
 import Type from '../../models/rules/mechanism/type'
 
@@ -8,7 +8,7 @@ export default class TypeParser extends MechanismFieldParser {
   }
 
   parseDefinition (name, definition) {
-    const fieldTypes = parseEntries(definition, typeDef => this.parseUsage(typeDef))
+    const fieldTypes = parseEntries(definition, (typeDef, field) => (typeDef.constructor === String) ? this.parseUsage(typeDef) : this.parseDefinition(field, typeDef))
     const type = new Type.ComplexType(name, fieldTypes)
     return this.save(type)
   }
@@ -16,7 +16,13 @@ export default class TypeParser extends MechanismFieldParser {
   parseUsage (name) {
     return ARRAY_FLAG.execute(name, {
       onTrue: childTypeName => new Type.Array(this.parseUsage(childTypeName)),
-      onFalse: () => this.data.find(type => type.name === name)
+      onFalse: () => {
+        const subtype = this.data.find(type => type.name === name)
+        if (!subtype) {
+          throw new ParsingError(`Unknown type ${name}`)
+        }
+        return subtype
+      }
     })
   }
 }

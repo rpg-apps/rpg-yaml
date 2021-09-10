@@ -1,6 +1,8 @@
 import { shallowEqualArrays } from 'shallow-equal'
 
 import MechanismParser from '../../parser/mechanism'
+import Choice from '../../models/rules/mechanism/choice'
+import Type from '../../models/rules/mechanism/type'
 
 let parser
 
@@ -16,6 +18,46 @@ describe('MechanismParser', () => {
   test('parses mechanism and keeps its name', () => {
     const mechanism = parser.parse(MECHANISM_NAME, {})
     expect(mechanism.name).toBe(MECHANISM_NAME)
+  })
+
+  describe('type parsing', () => {
+    const TYPE1 = { field1: 'long text', field2: 'move' },
+          TYPE1_NAME = 'type1',
+          TYPE2 = { field1: TYPE1_NAME, field2: 'formula' },
+          TYPE2_NAME = 'type2',
+          INVALID_COMPLEX_TYPE = { field: 'unreal type' },
+          INVALID_COMPLEX_TYPE_NAME = 'invalid type'
+
+    test('contains all preset types with no complex types', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, {})
+      expect(mechanism.types).toEqual(Type.PRESETS)
+    })
+
+    test('contains all preset types with complex types', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { types: { [TYPE1_NAME]: TYPE1 } })
+      expect(mechanism.types).toEqual(expect.arrayContaining(Type.PRESETS))
+
+    })
+
+    test('parses a complex type', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { types: { [TYPE1_NAME]: TYPE1 } })
+      expect(mechanism.types.length).toBe(Type.PRESETS.length + 1)
+      const type = mechanism.types.find(type => type.name === TYPE1_NAME)
+      expectTypeToMatchDefinition(type, TYPE1)
+    })
+
+    test('parses a complex type based on another complex type', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { types: { [TYPE1_NAME]: TYPE1, [TYPE2_NAME]: TYPE2 } })
+      expect(mechanism.types.length).toBe(Type.PRESETS.length + 2)
+      const type = mechanism.types.find(type => type.name === TYPE2_NAME)
+      expectTypeToMatchDefinition(type, TYPE2)
+    })
+
+    test('throws error if field type in a complex type doesn\'t exist', () => {
+      expect(() => {
+        parser.parse(MECHANISM_NAME, { types: { [INVALID_COMPLEX_TYPE_NAME]: INVALID_COMPLEX_TYPE } })
+      }).toThrow()
+    })
   })
 
   describe('choice parsing', () => {
@@ -74,12 +116,22 @@ describe('MechanismParser', () => {
     })
   })
 
-  describe('effect parsing', () => {
-    
+  describe('formula parsing', () => {
+    test('parses a formula', () => {
+      
+    })
   })
 })
 
+function expectTypeToMatchDefinition(type, definition) {
+  expect(type).toBeDefined()
+  expect(type).toBeInstanceOf(Type.ComplexType)
+  Object.keys(definition).forEach(field => expect(type.fieldTypes).toHaveProperty(field))
+}
+
 function expectChoiceToBe (choice, { name, playbook }, typeTest) {
+  expect(choice).toBeDefined()
+  expect(choice).toBeInstanceOf(Choice)
   expect(choice.name).toBe(name)
   expect(typeTest(choice.type)).toBe(true)
   expect(choice.playbook).toBe(playbook)

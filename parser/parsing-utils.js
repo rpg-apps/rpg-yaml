@@ -78,3 +78,6 @@ export const Sentence = {
   },
   wordAt: (sentence, index) => Sentence.words(sentence)[index]
 }
+
+
+export class ParsingError extends Error {}
