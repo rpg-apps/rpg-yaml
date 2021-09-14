@@ -1,3 +1,6 @@
+// TODO test types of instances for all instances
+// TODO add test for subfield choice character field
+
 import { shallowEqualArrays } from 'shallow-equal'
 
 import MechanismParser from '../../parser/mechanism'
@@ -233,6 +236,49 @@ describe('MechanismParser', () => {
       expect(mechanism.playbookFields[0].type.name).toEqual(FIELD1_TYPE)
       expect(mechanism.playbookFields[1].name).toEqual(FIELD2_NAME)
       expect(mechanism.playbookFields[1].type.name).toEqual(FIELD2_TYPE)
+    })
+  })
+
+  describe('character field parsing', () => {
+    const CHOICE_FIELD_NAME = 'choice field',
+          CHOICE_FIELD_VALUE = 'choose long text',
+          CHOICE_FIELD_TYPE = 'long text',
+          FORMULA_FIELD_NAME = 'formula field',
+          FORMULA_FIELD_VALUE = 'auto formula',
+          FORMULA_FIELD_FORMULA = 'formula',
+          VALUE_FIELD_NAME = 'value field',
+          VALUE_FIELD_VALUE = 'value'
+
+    test('contains a choice field', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { 'character fields': { [CHOICE_FIELD_NAME]: CHOICE_FIELD_VALUE } })
+      expect(mechanism.characterFields.length).toBe(1)
+      expect(mechanism.characterFields[0].name).toEqual(CHOICE_FIELD_NAME)
+      expect(mechanism.characterFields[0].choiceUsage.choice.type.name).toEqual(CHOICE_FIELD_TYPE)
+    })
+
+    test('contains a formula field', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { 'character fields': { [FORMULA_FIELD_NAME]: FORMULA_FIELD_VALUE } })
+      expect(mechanism.characterFields.length).toBe(1)
+      expect(mechanism.characterFields[0].name).toEqual(FORMULA_FIELD_NAME)
+      expect(mechanism.characterFields[0].calculationFormula).toEqual(FORMULA_FIELD_FORMULA)
+    })
+
+    test('contains a value field', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { 'character fields': { [VALUE_FIELD_NAME]: VALUE_FIELD_VALUE } })
+      expect(mechanism.characterFields.length).toBe(1)
+      expect(mechanism.characterFields[0].name).toEqual(VALUE_FIELD_NAME)
+      expect(mechanism.characterFields[0].initializationFormula).toEqual(VALUE_FIELD_VALUE)
+    })
+
+    test('contains multiple fields', () => {
+      const mechanism = parser.parse(MECHANISM_NAME, { 'character fields': { [CHOICE_FIELD_NAME]: CHOICE_FIELD_VALUE, [FORMULA_FIELD_NAME]: FORMULA_FIELD_VALUE, [VALUE_FIELD_NAME]: VALUE_FIELD_VALUE } })
+      expect(mechanism.characterFields.length).toBe(3)
+      expect(mechanism.characterFields[0].name).toEqual(CHOICE_FIELD_NAME)
+      expect(mechanism.characterFields[0].choiceUsage.choice.type.name).toEqual(CHOICE_FIELD_TYPE)
+      expect(mechanism.characterFields[1].name).toEqual(FORMULA_FIELD_NAME)
+      expect(mechanism.characterFields[1].calculationFormula).toEqual(FORMULA_FIELD_FORMULA)
+      expect(mechanism.characterFields[2].name).toEqual(VALUE_FIELD_NAME)
+      expect(mechanism.characterFields[2].initializationFormula).toEqual(VALUE_FIELD_VALUE)
     })
   })
 })
