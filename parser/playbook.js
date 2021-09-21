@@ -1,20 +1,22 @@
+import { uniq, join } from './parsing-utils'
 import Playbook from '../models/rules/playbook'
 
 export default function parsePlaybook (name, rawPlaybook, rulebook, mechanismParser) {
-  const mechanisms = []
-    .concat(rulebook.mechanisms)
-    .concat(Object.entries(rawPlaybook.mechanisms || {})
-      .map(([rawMechanismName, rawMechanism]) => mechanismParser.parse(rawMechanismName, rawMechanism)))
-    .filter((mechanism, index, array) => array.every((otherMechanism, otherIndex) => otherMechanism.name !== mechanism.name || otherIndex >= index))
+  const rulebookMechanisms = rulebook.mechanisms
+  const playbookMechanisms = Object.entries(rawPlaybook.mechanisms || {})
+      .map(([rawMechanismName, rawMechanism]) => mechanismParser.parse(rawMechanismName, rawMechanism))
+
+  const mechanisms = join(rulebookMechanisms, playbookMechanisms).filter(uniq('name'))
 
   const rules = mechanisms.reduce((rules, mechanism) => {
-    Object.entries(mechanism).filter(([key]) => !['name'].includes(key)).forEach(([key, value]) => {
-      rules[key] ||= []
-      const itemsToAdd = JOIN_FILTERS.hasOwnProperty(key) ? value.filter(item => rules[key].every(existingItem => JOIN_FILTERS[key](item) !== JOIN_FILTERS[key](existingItem))) : value
-      rules[key] = rules[key].concat(itemsToAdd)
-    })
+    Object.keys(mechanism)
+      .filter(field => !MECHANISMS_FILEDS_NOT_IN_RULES.includes(field))
+      .forEach(field => { rules[field] = join(rules[field], mechanism[field]).uniq(JOIN_FILTERS[field]) })
     return rules
-  }, { })
+  }, { types: [], formulas: [], effects: [], choices: [], globalFields: [], playbookFields: [], characterFields: [] })
+
+  const globalFields = rules.globalFields
+    .reduce((fields, field) => ({ ...fields, [field.name]: field.value }), { })
 
   const fields = rules.playbookFields.reduce((fields, fieldDefinition) => {
     const value = rawPlaybook[fieldDefinition.name]
@@ -24,10 +26,12 @@ export default function parsePlaybook (name, rawPlaybook, rulebook, mechanismPar
     }
 
     return { ...fields, [fieldDefinition.name]: fieldDefinition.type.parseValue(value) }
-  }, rules.globalFields.reduce((fields, field) => ({ ...fields, [field.name]: field.value }), { }))
+  }, globalFields)
 
   return new Playbook({ name, fields, characterFields: rules.characterFields, choices: rules.choices, rules })
 }
+
+const MECHANISMS_FILEDS_NOT_IN_RULES = ['name']
 
 const JOIN_FILTERS = {
   types: type => type.name,

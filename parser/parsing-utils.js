@@ -79,5 +79,21 @@ export const Sentence = {
   wordAt: (sentence, index) => Sentence.words(sentence)[index]
 }
 
+export function uniq (comparation) {
+  if (comparation) {
+    if (comparation.constructor === String) {
+      const key = comparation
+      comparation = item => item[key]
+    }
+
+    return (value, index, array) => array.findIndex(other => comparation(other) === comparation(original)) === index
+  } else {
+    return (value, index, array) => array.indexOf(value) === index
+  }
+}
+
+export function join (...arrays) {
+  return arrays.reduce((all, array) => all.concat(array), [])
+}
 
 export class ParsingError extends Error {}
