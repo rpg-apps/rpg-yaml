@@ -21,9 +21,9 @@ These are the effects:
  - **Modify**: Temporary change to rolls or other moves.
 
 ### Intermediate effects
-Intermediate effects are effexts that cause other effects.
+Intermediate effects are effects that cause other effects.
 These are the effects:
  - **Roll**: roll by formula and act based on result
  - **Choice**: Choose an option and act accordingly
- - **Trigger**: trigger another move
+ - **Trigger**: trigger another move's effect
  - **Condition**: trigger other effects depending on the result of a logical condition.

@@ -86,7 +86,7 @@ export function uniq (comparation) {
       comparation = item => item[key]
     }
 
-    return (value, index, array) => array.findIndex(other => comparation(other) === comparation(original)) === index
+    return (original, index, array) => array.findIndex(other => comparation(other) === comparation(original)) === index
   } else {
     return (value, index, array) => array.indexOf(value) === index
   }

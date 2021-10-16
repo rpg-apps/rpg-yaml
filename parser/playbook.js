@@ -11,7 +11,7 @@ export default function parsePlaybook (name, rawPlaybook, rulebook, mechanismPar
   const rules = mechanisms.reduce((rules, mechanism) => {
     Object.keys(mechanism)
       .filter(field => !MECHANISMS_FILEDS_NOT_IN_RULES.includes(field))
-      .forEach(field => { rules[field] = join(rules[field], mechanism[field]).uniq(JOIN_FILTERS[field]) })
+      .forEach(field => { rules[field] = join(rules[field], mechanism[field]).filter(uniq(JOIN_FILTERS[field])) })
     return rules
   }, { types: [], formulas: [], effects: [], choices: [], globalFields: [], playbookFields: [], characterFields: [] })
 
@@ -21,20 +21,19 @@ export default function parsePlaybook (name, rawPlaybook, rulebook, mechanismPar
   const fields = rules.playbookFields.reduce((fields, fieldDefinition) => {
     const value = rawPlaybook[fieldDefinition.name]
     if (!fieldDefinition.optional && !value) {
-      // Resume throwing an error after all playbooks are ready
-      // throw new Error(`Missing field ${fieldDefinition.name} in playbook ${this.name}`)
+      throw new Error(`Missing field ${fieldDefinition.name} in playbook ${this.name}`)
     }
 
     return { ...fields, [fieldDefinition.name]: fieldDefinition.type.parseValue(value) }
   }, globalFields)
 
-  return new Playbook({ name, fields, characterFields: rules.characterFields, choices: rules.choices, rules })
+  return new Playbook({ name, mechanisms, fields, characterFields: rules.characterFields, choices: rules.choices, rules })
 }
 
 const MECHANISMS_FILEDS_NOT_IN_RULES = ['name']
 
 const JOIN_FILTERS = {
-  types: type => type.name,
+  types: 'name',
   effects: effect => effect.pattern.raw,
   formulas: formula => formula.pattern.raw,
 }
