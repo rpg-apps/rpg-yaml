@@ -8,6 +8,6 @@ export default class FormulaParser extends MechanismFieldParser {
 
   parseDefinition (pattern, definition, type) {
     const formula = new Formula.ComplexFormula(pattern, definition)
-    return this.save(formula)
+    return this.add(formula)
   }
 }

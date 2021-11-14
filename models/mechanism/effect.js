@@ -1,4 +1,3 @@
-import Valuable from './base/valuable'
 import Pattern from './base/pattern'
 
 export default class Effect {
@@ -40,11 +39,12 @@ Effect.Modifier = class Modifier {
 }
 
 Effect.PRESETS = [
+  new Effect('die', (something, { executioner}) => executioner.die())
   new Effect('show <string:something>', ({ something }, { executioner }) => executioner.output(something)),
 
   new Effect('add <formula:value> to <field:field>', ({ field, value }, { character }) => character.fields[field].push(value)),
   new Effect('remove <formula:value> from <field:field>', ({ field, value }, { character }) => character.fields[field].value.splice(field.value.indexOf(value))),
-  new Effect('set <formula:value> = <field:field>', ({ field, value }, { character }) => { character.fields[field].value = value }),
+  new Effect('set <field:field> = <formula:value>', ({ field, value }, { character }) => { character.fields[field].value = value }),
   new Effect('change <field:field> by <formula:value>', ({ field, value }, { character }) => { character.fields[field].value += value }),
 
   new Effect('modify <string:filter> <formula:value>', ({ filter, value }, { character }) => { character.modifiers.push({ filter, value }) }),

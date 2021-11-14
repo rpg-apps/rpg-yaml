@@ -6,7 +6,7 @@ import EffectParser from './effect'
 
 import Mechanism from '../../models/rules/mechanism'
 
-import { parseFields } from '../parsing-utils'
+import { parseFields, mapValues } from '../parsing-utils'
 
 export default class MechanismParser {
   constructor (rawRules) {
@@ -16,44 +16,33 @@ export default class MechanismParser {
   parse (name, rawMechanism) {
     this._reset()
     parseFields(rawMechanism, this._parsers(), this)
-    return new Mechanism({
-      name,
-      types: this.typeParser.data,
-      formulas: this.formulaParser.data,
-      effects: this.effectParser.data,
-      choices: this.choiceParser.data,
-      globalFields: this.globalFieldParser.data,
-      playbookFields: this.playbookFieldParser.data,
-      characterFields: this.characterFieldParser.data
-    })
+    return new Mechanism({ name, ...this._data() })
   }
 
   _reset () {
-    this.typeParser = new TypeParser(this)
-    this.formulaParser = new FormulaParser(this)
-    this.effectParser = new EffectParser(this)
-    this.choiceParser = new ChoiceParser(this)
-    this.globalFieldParser = new GlobalFieldParser(this)
-    this.playbookFieldParser = new PlaybookFieldParser(this)
-    this.characterFieldParser = new CharacterFieldParser(this)
-  }
-
-  _parsers () {
-    return {
-      types: this._collectionObjectParser('type'),
-      formulas: this._collectionObjectParser('formula'),
-      effects: this._collectionObjectParser('effect'),
-      choices: this._collectionObjectParser('choice'),
-      globalFields: this._collectionObjectParser('globalField'),
-      playbookFields: this._collectionObjectParser('playbookField'),
-      characterFields: this._collectionObjectParser('characterField'),
+    this.parsers = {
+      types: new TypeParser(this),
+      formulas: new FormulaParser(this),
+      effects: new EffectParser(this),
+      choices: new ChoiceParser(this),
+      globalFields: new GlobalFieldParser(this),
+      playbookFields: new PlaybookFieldParser(this),
+      characterFields: new CharacterFieldParser(this)
     }
   }
 
-  _collectionObjectParser (name, method = 'parseDefinition') {
+  _parsers () {
+    return mapValues(this.parsers, (parser, field) => this._collectionObjectParser(field))
+  }
+
+  _data () {
+    return mapValues(this.parsers, parser => parser.data)
+  }
+
+  _collectionObjectParser (name) {
+    const parser = this.parsers[name]
     return (collection, context) => {
-      const parser = this[`${name}Parser`]
-      return Object.entries(collection).map(([key, value]) => parser[method](key, value))
+      return Object.entries(collection).map(([key, value]) => parser.parseDefinition(key, value))
     }
   }
 }

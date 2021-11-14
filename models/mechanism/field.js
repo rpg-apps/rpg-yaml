@@ -45,18 +45,7 @@ Field.CharacterField = class CharacterField extends Field {
   }
 }
 
-Field.ChoiceField = class ChoiceField extends Field.CharacterField {
-  constructor (name, choiceUsage) {
-    super(name)
-    this.choiceUsage = choiceUsage
-  }
-
-  async getValue (character) {
-    return this.choiceUsage.getValue(character)
-  }
-}
-
-Field.FormulaField = class FormulaField extends Field.CharacterField {
+Field.AutomaticField = class AutomaticField extends Field.CharacterField {
   constructor (name, calculationFormula) {
     super(name)
     this.calculationFormula = calculationFormula
@@ -67,7 +56,7 @@ Field.FormulaField = class FormulaField extends Field.CharacterField {
   }
 }
 
-Field.ValueField = class ValueField extends Field.CharacterField {
+Field.ManualField = class ManualField extends Field.CharacterField {
   constructor (name, initializationFormula) {
     super(name)
     this.initializationFormula = initializationFormula

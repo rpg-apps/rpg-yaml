@@ -19,13 +19,6 @@ export default class Character {
     return this.calculator.calc(raw) + modifierValues.reduce((sum, value) => sum + value, 0)
   }
 
-  trigger (moveName, executioner) {
-    const move = this.moves.find(({ name }) => name === moveName)
-    if (move) {
-      this.execute(move.effect, executioner)
-    }
-  }
-
   execute(effectCall, executioner) { // an executioner has the ability to display an output and recieve an input
     return this.calculator.execute(effectCall, this, executioner)
   }

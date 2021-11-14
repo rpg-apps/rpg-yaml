@@ -37,7 +37,7 @@ Formula.ComplexFormula = class ComplexFormula extends Formula {
 
 Formula.PRESETS = [
   new Formula.PresetFormula('<boolean:condition>\\?<number:onTrue>:<number:onFalse>', 'number', async params => (params.condition ? params.onTrue : params.onFalse)),
-  
+
   new Formula.PresetFormula('<number:A>\\+<number:B>', 'number', async params => params.A + params.B),
   new Formula.PresetFormula('<number:A>-<number:B>', 'number', async params => params.A - params.B),
   new Formula.PresetFormula('<number:A>\\*<number:B>', 'number', async params => params.A * params.B),

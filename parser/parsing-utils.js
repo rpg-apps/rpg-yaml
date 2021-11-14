@@ -51,12 +51,9 @@ Flag.Parameter = class ParameterFlag extends Flag {
   }
 }
 
-export function parseEntries (object, mapping) {
+export function mapValues (object, mapping) {
   return Object.entries(object)
-    .reduce((types, [key, value]) => ({
-      ...types,
-      [key]: mapping(value, key, object)
-    }), { })
+    .reduce((types, [key, value]) => ({ ...types, [key]: mapping(value, key, object) }), { })
 }
 
 export function mapSmolJSON (raw, map) {
@@ -94,6 +91,23 @@ export function uniq (comparation) {
 
 export function join (...arrays) {
   return arrays.reduce((all, array) => all.concat(array), [])
+}
+
+export function mapify (array, keyFunction, valueFunction, validation=()=>{}, startingValue={}) {
+  if (!(keyFunction instanceof Function)) {
+    const keyField = keyFunction
+    keyFunction = item => item[keyField]
+  }
+  if (!(valueFunction instanceof Function)) {
+    const valueField = valueFunction
+    valueFunction = item => item[valueField]
+  }
+  return array.reduce((result, item) => {
+    const key = keyFunction(item)
+    const value = valueFunction(item)
+    validation(key, value, item)
+    return ({ ...result, [key]: value })
+  }, startingValue)
 }
 
 export class ParsingError extends Error {}
