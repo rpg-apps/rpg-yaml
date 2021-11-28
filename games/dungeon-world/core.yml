@@ -6,9 +6,9 @@ mechanisms: &mechanisms
     types:
       move:
         name: text
-        type: [basic, special, starting, advanced]
+        type: text
         trigger: text
-        effect: effect
+        procedure: procedure
     global fields: &moves-global-fields
       basic moves: large
       special moves: large
@@ -19,20 +19,20 @@ mechanisms: &mechanisms
       moves: start as basic moves and special moves and starting moves
     formulas: &moves-formulas
       moves 2-10: moves 2-5 and moves 6-10
-    effects: &moves-effects
-      trigger <move>: execute move.effect
+    procedures: &moves-procedures
+      trigger <move>: execute move.procedure
       gain <move>:
         - add move to moves
-        - is move.trigger="instant":
+        - is move.trigger=instant:
             yes: trigger move
-            no: no effect
+            no: do nothing
       add advanced move:
         is level<6:
           yes: gain choice from moves 2-5
           no: gain choice from moves 2-10
     hooks:
       after value change:
-        for each move in moves where move.trigger starts with 'on ' and calc(move.trigger.substr(3)): trigger move
+        trigger move for everty move in moves where move.trigger starts with on and calc(part 3..end of move.trigger)
   description: &description
     playbook fields: &description-playbook-fields
       in a sentence: text
@@ -40,9 +40,9 @@ mechanisms: &mechanisms
       name options: text array
       look options: text array array
     choices: &description-choices
-      name: choose freely from name options
-      description: choose long text
-      look: choose freely from look options
+      name: text with recommendations from name options
+      description: long text
+      look: free text with recommendations from look options
     character fields: &description-character-fields
       name: start as name choice
       description: start as description choice
@@ -55,7 +55,7 @@ mechanisms: &mechanisms
     global fields: &roll-global-fields
       initial stats: [8, 9, 12, 13, 15 ,16]
     choices: &roll-choices
-      stat: assign from initial stats to {strength,dexterity,constitution,intelligence,wisdom,charisma}
+      stat: assign each initial stats to strength, dexterity, constitution, intelligence, wisdom, charisma
     character fields: &roll-character-fields
       strength: start as stat.strength choice
       dexterity: start as stat.dexterity choice
@@ -70,8 +70,8 @@ mechanisms: &mechanisms
       confused: start as false
       scarred: start as false
     formulas: &roll-formulas
-      modifier for <number:stat>: { stat<=8: -1, 9<=stat<=12: 0, 13<=stat<=15: 1, 16<=stat<=17: 2, 18<=stat: 3 }
-      <boolean:debility> modifier: { debility: -1, else: 0 }
+      modifier for <number:stat> (number): { stat<=8: -1, 9<=stat<=12: 0, 13<=stat<=15: 1, 16<=stat<=17: 2, 18<=stat: 3 }
+      <boolean:debility> modifier (number): { debility: -1, else: 0 }
       roll: 2d6
       str: (modifier for strength) + (weak modifier)
       dex: (modifier for dexterity) + (shakey modifier)
@@ -79,12 +79,15 @@ mechanisms: &mechanisms
       int: (modifier for intelligence) + (stunned modifier)
       wis: (modifier for wisdom) + (confused modifier)
       cha: (modifier for charisma) + (scarred modifier)
-    effects: &roll-effects
+    procedures: &roll-procedures
       roll <formula> {options}:
-        roll formula:
+        switch formula:
           "1..6": 
             - add 1 to xp
-            - options.miss or options.failure or "Oh oh... The GM will tell you what just happened, but at least you got XP!"
+            - either:
+              - options.miss
+              - options.failure
+              - Oh oh... The GM will tell you what just happened, but at least you got XP!
           "7..9": [options."partial success", options.hit]
           "10..15": [options.success, options.hit]
       take a debility:
@@ -107,10 +110,10 @@ mechanisms: &mechanisms
       take <formula> ongoing <trigger>: modify <trigger> <formula>
   holds: &holds
     types: &holds-types
-      hold: { name: text, options: effect map }
+      hold: { name: text, options: procedure map }
     character fields: &holds-character-fields
       holds: start as []
-    effect: &holds-effects
+    procedure: &holds-procedures
       hold <count> <name> {options}:
         repeat count times: add {name,options} to holds
       hold <count> <name>: hold count name {}
@@ -126,13 +129,13 @@ mechanisms: &mechanisms
       damage: start as base damage formula
       hp: start as max hp
       armor: start as 0
-    effects: &damage-effects
+    procedures: &damage-procedures
       deal <formula>: show <formula>
       take damage:
-        - reduce hp by (input formula "damage")-(input boolean "ignore armor?"?0:max(0,(armor)-(input number "piercing"))
+        - reduce hp by (input formula damage)-((input boolean ignore armor?)?0:max(0,(armor)-(input number piercing))
         - is hp<0:
           yes: set hp=0
-          no: no effect
+          no: do nothing
       heal <formula>: add formula to hp
   race: &race
     types: &race-types
@@ -142,7 +145,7 @@ mechanisms: &mechanisms
     choices: &race-choices
       race:
         choose: from race options
-        after: add race choice move to moves
+        after: add race choice.move to moves
     character fields: &race-character-fields
       race: start as race.name choice
       race move: start as reace.move choice 
@@ -161,12 +164,12 @@ mechanisms: &mechanisms
       bond options: text array
     character fields: &bonds-character-fields
       bonds: start as []
-    effects: &bonds-effects
+    procedures: &bonds-procedures
       add bond: add free choice from bond options to bonds
       resolve bond: remove choice from bonds
   equipment: &equipment
     types: &equipment-types
-      tag: { tag: text, text: text, effect: effect }
+      tag: { tag: text, text: text, procedure: procedure }
       equipment: { name: text, description: text, tags: tag array, weight: number, cost: number }
     global fields: &equipment-global-fields
       tags: large
@@ -175,21 +178,21 @@ mechanisms: &mechanisms
       load: formula
       starting gear options: equipment array array array # options for choices between arrays of equipment
     choices: &equipment-choices
-      gear: choose from starting gear options
+      gear: from starting gear options
     character fields: &equipment-character-fields
       gear: start as gear choice
     formulas: &equipment-formulas
-      weight: sum of equipment.weight for equipment in gear
+      weight (number): sum of equipment.weight for equipment in gear
       regular <number> <text:name>: array of number equipment where name is <name>
       regular <text:name>: regular 1 name
-    effects: &equipment-effects
+    procedures: &equipment-procedures
       # TODO do I need the "gear" word here?
       use <amount> gear tagged <tag>:
         repeat amount times:
-          execute tag.effect for tag in (choice equipment from gear where equipment.tags inlucde tag).tags
+          for tag in (choice equipment from gear where equipment.tags inlucde tag).tags: execute tag.procedure 
       use <amount> gear <name>:
         repeat amount times:
-          execute tag.effect for tag in (choice equipment from gear where equipment.name is name).tags
+          for tag in (choice equipment from gear where equipment.name is name).tags: execute tag.procedure
       use gear with tagged <tag>: use 1 gear tagged tag
       use <name>: use 1 gear <name>
 playbooks:
@@ -214,13 +217,13 @@ playbooks:
           type: race
           text: You descend from an ancient martial tradition. Gain +1 to spout lore on anything related to warfare.
           trigger: constant
-          effect: take +1 ongoing to spout lore on anything related to warfare.
+          procedure: take +1 ongoing to spout lore on anything related to warfare.
       - name: Human
         move:
           type: race
           text: Your fighting style is showy and impressive. Gain +1 forward to parley with anyone who has seen you fight.
           trigger: After someone saw you fight.
-          effect: take +1 forward to parley with them.
+          procedure: take +1 forward to parley with them.
     alignment options:
       - name: good
         goal: Slay a menace to the innocent.
@@ -250,7 +253,7 @@ playbooks:
             * On a 10+, deal your damage and apply 1 technique.
             * On a 7-9, deal your damage and apply 1 technique, and your opponent attacks you.
         trigger: When you attempt to incorporate magic into a melee attack
-        effect:
+        procedure:
           roll roll+int:
             success: [start applying technic, deal damage, finish applying technic]
             partial success: [start applying technic, deal damage, take damage, finish applying technic]
@@ -264,9 +267,9 @@ playbooks:
               * They lose the respect of their peers and underlings
               * They retreat
         trigger: When you challenge someone to a duel
-        effect:
+        procedure:
           - choose Do they accept?:
-              yes: no effect
+              yes: do nothing
               no:
                 roll roll+cha:
                   success: choose 2
@@ -283,20 +286,20 @@ playbooks:
               * What emotion drives this person?
               * What is this person trying to hide?
         trigger: When you cross swords with a humanoid opponent
-        effect:
+        procedure:
           - take +1 forward to discern realities against them.
           - take +[What is this person about to do?, What emotion drives this person?, What is this person trying to hide?] forward to discern realities options against them
       - name: Student of the Blade
         type: starting
         text: Begin play with 4 techniques.
         trigger: instant
-        effect: add choose 4 from all techinques to aquired techniques
+        procedure: add choose 4 from all techinques to aquired techniques
     moves 2-5:
       - name: Armored
         type: advanced
         text: Ignore the clumsy tag on any armor you wear.
         trigger: constant
-        effect: ignore tag for every tag in eqipment.tags for every eqipment in gear where tag.name = Clumsy
+        procedure: ignore tag for every tag in eqipment.tags for every eqipment in gear where tag.name = Clumsy
       - name: Wind Slash
         type: advanced
         text: >
@@ -307,7 +310,7 @@ playbooks:
               Do not deal your damage.
               Do not apply any techniques.
         trigger: When you attack at near range with blades of cutting air
-        effect:
+        procedure:
           roll roll+int:
             success: [apply technique before, deal damage, apply technique after]
             partial success:
@@ -319,12 +322,12 @@ playbooks:
         type: advanced
         text: You have +1 armor against any opponent that you have challenged to a duel.
         trigger: constant
-        effect: take +1 to armor ongiong against any opponent that you have challenged to a duel.
+        procedure: take +1 to armor ongiong against any opponent that you have challenged to a duel.
       - name: Floating Step
         type: advanced
         text: When you get a 10+ with arcane bladework, take +1 forward to any defy danger rolls to navigate the battlefield.
         trigger: on "Arcane Bladework".roll>=10
-        effect: take +1 forward to any defy danger to navigate the battlefields
+        procedure: take +1 forward to any defy danger to navigate the battlefields
       - name: Know Your Enemy
         type: advanced
         text: >
@@ -335,7 +338,7 @@ playbooks:
               Take +1 forward against your rival.
               Gain a key insight into your rival’s fighting style.
         trigger: When you re-encounter somebody who has wronged you
-        effect:
+        procedure:
           - roll roll+int:
               success: choose 2
               patrial success: choose 1
@@ -351,7 +354,7 @@ playbooks:
           * On a 10+, deal your damage and apply 2 of your techniques.
           * On a 7-9, deal your damage and apply 1 techniques, and your opponent attacks you.
         trigger: When you attempt to incorporate magic into a melee attack
-        effect: 
+        procedure: 
           roll roll+int:
             success: [apply technique1 before, apply technique2 before, deal damage, apply technique1 after, apply technique2 after]
             patrial success: [apply technique before, deal damage, apply technique after, take damage]
@@ -359,7 +362,7 @@ playbooks:
         type: advanced
         text: Gain 3 techniques
         trigger: instant
-        effect: add choose 3 from all techinques to aquired techniques
+        procedure: add choose 3 from all techinques to aquired techniques
       - name: Show Off
         type: advanced
         text: >
@@ -370,7 +373,7 @@ playbooks:
               The crowd does not keep their attention on you and demand an encore after you’re done.
               The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest
         trigger: When you attempt to wow an audience with a display of your power
-        effect:
+        procedure:
           roll roll+int:
             success: choose 2
             partial success: choose 1
@@ -387,13 +390,13 @@ playbooks:
         type: advanced
         text: Gain an additional three techniques.
         trigger: instant
-        effect: add choose 3 from all techinques to aquired techniques
+        procedure: add choose 3 from all techinques to aquired techniques
       - name: Two Men Enter, One Man Leaves
         type: advanced
         replaces: To The Death
         text: You have +1 armor. Against any opponent that you have challenged to a duel (whether they declined or accepted) you have +2 armor instead.
         trigger: constant
-        effect:
+        procedure:
           - take +1 to armor ongoing
           - take +1 to armor ongiong against any opponent that you have challenged to a duel.
       - name: Master’s Bladework
@@ -404,7 +407,7 @@ playbooks:
             * On a 10+, deal your damage and apply 3 technique.
             * On a 7-9, deal your damage and apply 2 technique, and your opponent attacks you.
         trigger: When you attempt to incorporate magic into a melee attack
-        effect:
+        procedure:
           roll roll+int:
             success:
               - apply technique1 before
@@ -432,7 +435,7 @@ playbooks:
               - Do not deal your damage.
               - Do not apply any techniques
         trigger: When you attack at near range with blades of cutting air
-        effect:
+        procedure:
           roll roll+int:
             success:
               - apply technique1 before
@@ -460,7 +463,7 @@ playbooks:
         replaces: Floating Step
         text: You move with inhuman grace and are capable of leaping distances that would be impossible for mere mortals. In addition, when you get a 10+ with arcane bladework, take +1 ongoing to any defy danger rolls to navigate the battlefield until the battle ends.
         trigger: on arcane bladework.roll >= 10
-        effect: take +1 ongoing to Defy Danger to navigate the battlefield until the battle ends.
+        procedure: take +1 ongoing to Defy Danger to navigate the battlefield until the battle ends.
       - name: Steel Tells No Lies
         type: advanced
         replaces: Know Your Enemy
@@ -472,7 +475,7 @@ playbooks:
               - Take +1 forward against your rival and, if you could already see them, you realize a way to isolate them and yourself from anyone who would interfere with your duel.
               - The nature of their fighting style is laid bare before you; hold 1 to perform a move from it that you have seen.
         trigger: When you re-encounter somebody who has wronged you
-        effect:
+        procedure:
           - roll roll+int:
               success: choose 2
               patrial success: choose 1
@@ -482,7 +485,7 @@ playbooks:
                   - take +1 forward against your rival
                   - choose could you already see them:
                       yes: you realize a way to isolate them and yourself from anyone who would interfere with your duel.
-                      no: no effect
+                      no: do nothing
               The nature of their fighting style is laid bare before you; hold 1 to perform a move from it that you have seen.: hold 1
           - spend to perform a move from your enemy's fighting style that you have seen.
       - name: Storied Hero
@@ -492,7 +495,7 @@ playbooks:
             * On a 10+, you are recognized for your deeds and the common people either welcome you with open arms or acquiesce to your demands with fear as appropriate.
             * On a 7-9, your name gets you a meeting with anyone but no guaranteed favors. On a miss, somebody has a bone to pick with you.
         trigger: When you enter a settlement for the first time
-        effect:
+        procedure:
           roll roll+cha:
             success: you are recognized for your deeds and the common people either welcome you with open arms or acquiesce to your demands with fear as appropriate.
             partial success: your name gets you a meeting with anyone but no guaranteed favors.
@@ -501,7 +504,7 @@ playbooks:
         type: advanced
         text: You take on a student to carry on the techniques you have learned. The student counts as a hireling with cost (learning the art of the blade), loyalty 2, sentry 2, and man at arms 2, and first aid 1. If you die, your student inherits your accumulated knowledge and becomes a PC with a character sheet identical to yours. They must achieve some great victory in their own right before they can take on a student of their own.
         trigger: instant
-        effect:
+        procedure:
           - add {name=student,loyalty=2,sentry=2,man at arms=2,first aid=2} to hirelings
       - name: Multilass Initiate
         type: advanced
@@ -513,9 +516,9 @@ playbooks:
           technique:
             name: string
             text: string
-            before: effect
-            after: effect
-        effects:
+            before: procedure
+            after: procedure
+        procedures:
           apply technique before:
             - set technique = choose from aquired techniques
             - execute technique.before
@@ -551,10 +554,10 @@ playbooks:
         move:
           text: You may be elf, dwarf, halfling, or human, but you and your people are not from around here. At the beginning of each session, the GM will ask you something about your homeland, why you left, or what you left behind. If you answer them, mark XP.
           trigger: At the beginning of each session
-          effect:
+          procedure:
             choose Did you answer the GM's question:
               yes: change xp by 1
-              no: no effect
+              no: do nothing
     alignment options:
       - alignemnt: chaotic
         goal: Eschew a convention of the civilized world.
@@ -587,19 +590,19 @@ playbooks:
           * Riches and property
           * Fame and glory
         trigger: While pursuing one of your appetites
-        effect:
+        procedure:
           modify roll d6+d8 ongoing:
             afterroll:
-              is last_d6>last_d8:
+              is the d6 > the d8:
                 yes: The GM will introduce a complication or danger that comes about due to your heedless pursuits.
-                no: no effect
+                no: do nothing
         on move addition:
           - add 2 from appetite options to appetites Choose two appetites
       The Upper Hand:
         text: >
           You take +1 ongoing to last breath rolls. When you take your last breath, on a 7–9 you make an offer to Death in return for your life. If Death accepts he will return you to life. If not, you die.
         trigger: constant
-        effect: 
+        procedure: 
           - modify last breath +1 ongoing
           - modify last breath replace:
               partial succes: You make and offer to Death
@@ -607,14 +610,14 @@ playbooks:
         text: >
           While you wield a weapon it gains the forceful and messy tags.
         trigger: constant
-        effect: modify equip(weapon) +forceful +messy ongoing
+        procedure: modify equip(weapon) +forceful +messy ongoing
       What Are You Waiting For:
         text: >
           When you cry out a challenge to your enemies, roll+Con.
           * On a 10+ they treat you as the most obvious threat to be dealt with and ignore your companions, take +2 damage ongoing against them.
           * On a 7–9 only a few (the weakest or most foolhardy among them) fall prey to your taunting.
         trigger: When you cry out a challenge to your enemies
-        effect: 
+        procedure: 
           roll roll+Con:
             success:
               - They treat you as the most obvious threat to be dealt with and ignore your companions.
@@ -704,7 +707,7 @@ playbooks:
           title options: text array
         choices:
           << *description-choices
-          title: choose freely from title options
+          title: text with recommendations from title options
         character fields:
           << *description-character-fields
           title: start as title choice
@@ -712,17 +715,17 @@ playbooks:
         choices:
           armor move:
             choose: from armor moves
-            after: add race choice move to moves
+            after: add armor move choice.move to moves
         global fields:
           armor moves:
             Full Plate and Packing Steel:
               text: You ignore the clumsy tag on armor you wear.
               trigger: constant
-              effect: modify equip(armor) -clmusy
+              procedure: modify equip(armor) -clmusy
             Unencumbered, Unharmed:
               text: So long as you are below your Load and neither wear armor nor carry a shield, take +1 armor.
               trigger: constant
-              effect:
+              procedure:
                 is weight<load&no_armor: modify armor +1 ongoing
       roll:
         global fields: << *roll-global-fields
@@ -731,7 +734,7 @@ playbooks:
         formulas:
           << *roll-formulas
           roll: input boolean "Are you pursuing an appetite?"?d6+d8:2d6
-        effects:
+        procedures:
           roll <formula> {options}:
             - roll <formula> {options}:
                 roll formula:
@@ -742,7 +745,7 @@ playbooks:
                   "10..15": [options.success, options.hit]
             - is last d6 > last d8:
                 yes: the GM will introduce a complication or danger that comes about due to your heedless pursuits.
-                no: no effect
+                no: do nothing
   bard:
     in a sentence: A travelling performer who knows the stories of the land and tells of its heros
     introduction: >
@@ -770,12 +773,12 @@ playbooks:
         move:
           text: When you enter an important location (your call) you can ask the GM for one fact from the history of that location.
           trigger: When you enter an important location (your call)
-          effect: ask the GM for one fact from the history of that location.
+          procedure: ask the GM for one fact from the history of that location.
       - name: Human
         move:
           text: When you first enter a civilized settlement someone who respects the custom of hospitality to minstrels will take you in as their guest.
           trigger: When you first enter a civilized settlement
-          effect: someone who respects the custom of hospitality to minstrels will take you in as their guest.
+          procedure: someone who respects the custom of hospitality to minstrels will take you in as their guest.
     alignment options:
       - alignemnt: good
         goal: Perform your art to aid someone else.
@@ -951,7 +954,7 @@ playbooks:
         move:
           text: Your faith is diverse. Choose one wizard spell. You can cast and be granted that spell as if it was a cleric spell.
           trigger: When you first enter a civilized settlement
-          effect: someone who respects the custom of hospitality to minstrels will take you in as their guest.
+          procedure: someone who respects the custom of hospitality to minstrels will take you in as their guest.
     alignment options:
       - alignemnt: good
         goal: Endanger yourself to heal another.
@@ -2141,7 +2144,7 @@ playbooks:
         type: advanced
         text: >
           When you attempt to counter an arcane spell that will otherwise affect you, stake one of your prepared spells on the defense and roll+Int.
-          On a 10+, the spell is countered and has no effect on you.
+          On a 10+, the spell is countered and has do nothing on you.
           On a 7-9, the spell is countered and you forget the spell you staked. Your counterspell protects only you; if the countered spell has other targets they get its effects.
       - name: Quick Study
         type: advanced
@@ -2198,7 +2201,7 @@ basic moves:
       * On a 10+, you deal your damage to the enemy and avoid their attack. At your option, you may choose to do +1d6 damage but expose yourself to the enemy’s attack.
       * On a 7–9, you deal your damage to the enemy and the enemy makes an attack against you.
     trigger: When you attack an enemy in melee
-    effect:
+    procedure:
       roll roll+Str:
         success:
           choose do +1d6 damage but expose yourself to the enemy’s attack?:
@@ -2215,7 +2218,7 @@ basic moves:
         * You have to take what you can get: -1d6 damage.
         * You have to take several shots, reducing your ammo by one.
     trigger: When you take aim and shoot at an enemy at range
-    effect:
+    procedure:
       roll roll+Dex:
         hit: deal damage
         partial success:
@@ -2237,7 +2240,7 @@ basic moves:
       * On a 10+, you do what you set out to, the threat doesn’t come to bear.
       * On a 7–9, you stumble, hesitate, or flinch: the GM will offer you a worse outcome, hard bargain, or ugly choice.
     trigger: When you act despite an imminent threat or suffer a calamity
-    effect:
+    procedure:
       - choose How do you deal with it?:
           By powering through (Str): modify once roll +Str
           By getting out of the way or acting fast (Dex): modify once roll +Dex
@@ -2260,7 +2263,7 @@ basic moves:
       * Open up the attacker to an ally giving that ally +1 forward against the attacker.
       * Deal damage to the attacker equal to your level.
     trigger: When you stand in defense of a person, item, or location under attack
-    effect:
+    procedure:
       - roll roll+Con:
           success: hold 3
           partial success: hold 1
@@ -2270,7 +2273,7 @@ basic moves:
           Open up the attacker to an ally giving that ally +1 forward against the attacker.:
             choose Is the ally you?:
               yes: modify against the enemy +1 forward
-              no: no effect
+              no: do nothing
           Deal damage to the attacker equal to your level.: deal level/2
   - name: Spout Lore
     type: basic
@@ -2280,7 +2283,7 @@ basic moves:
       * On a 7–9, the GM will only tell you something interesting—it’s on you to make it useful.
       The GM might ask you “How do you know this?” Tell them the truth, now.
     trigger: When you consult your accumulated knowledge about something
-    effect:
+    procedure:
       roll roll+Int:
         success: The GM will tell you something interesting and useful about the subject relevant to your situation, and might ask you “How do you know this?” Tell them the truth, now.
         patrial success: The GM will only tell you something interesting — it’s on you to make it useful, and might ask you “How do you know this?” Tell them the truth, now.
@@ -2299,7 +2302,7 @@ basic moves:
       * Who’s really in control here?
       * What here is not what it appears to be?
     trigger: When you closely study a situation or person
-    effect:
+    procedure:
       - roll roll+Wis:
           success: choose 3
           partial succes: choose 1
@@ -2319,7 +2322,7 @@ basic moves:
       * On a 10+, they do what you ask if you first promise what they ask of you.
       * On a 7–9, they will do what you ask, but need some concrete assurance of your promise, right now.
     trigger: When you have leverage on a GM Character and manipulate them
-    effect:
+    procedure:
       roll roll+Cha:
         success: They do what you ask if you first promise what they ask of you.
         patrial success: They will do what you ask, but need some concrete assurance of your promise, right now.
@@ -2330,7 +2333,7 @@ basic moves:
       * On a 10+ they take +1 or -2, your choice. 
       * On a 7–9 you also expose yourself to danger, retribution, or cost.
     trigger: When you help or hinder someone you have a bond with
-    effect:
+    procedure:
       roll roll+bond:
         success:
           choose wether they take +1 or -2:
@@ -2347,7 +2350,7 @@ special moves:
       * On a 7–9, Death himself will offer you a bargain. Take it and stabilize or refuse and pass beyond the Black Gates into whatever fate awaits you.
       * On 6-, your fate is sealed. You’re marked as Death’s own and you’ll cross the threshold soon. The GM will tell you when.
     trigger: on hp=0
-    effect:
+    procedure:
       - You catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
       - roll roll:
           success:
@@ -2367,7 +2370,7 @@ special moves:
       * Less than or equal to your load+2, you take -1 ongoing until you lighten your burden
       * Greater than your load+2, you have a choice: drop at least 1 weight and roll at -1, or automatically fail
     trigger: on wieght>load
-    effect:
+    procedure:
       is weight>load+2:
         yes: modify all autofail forced ongoing until weight<=load+2
         no: modify all -1 forced ongoing until weight>load+2||wright<=load
@@ -2379,15 +2382,15 @@ special moves:
       If you have enough XP you may level up.
       When you wake from at least a few uninterrupted hours of sleep heal damage equal to half your max HP.
     trigger: When you settle in to rest
-    effect:
+    procedure:
       - use gear rations
       - If you’re somewhere dangerous decide the watch order as well.
       - is xp-level>=7:
           yes: trigger Level up
-          no: no effect
+          no: do nothing
       - choose Did you get at least a few uninterrupted hours of sleep?:
           yes: change hp +maxHP/2
-          no: no effect
+          no: do nothing
   - name: Take Watch
     type: special
     text: >
@@ -2396,7 +2399,7 @@ special moves:
       * On a 7–9, you react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
       * On a miss, whatever lurks outside the campfire’s light has the drop on you.
     trigger: When you’re on watch and something approaches the camp
-    effect:
+    procedure:
         roll roll+Wis:
           success:
             - You’re able to wake the camp and prepare a response
@@ -2415,7 +2418,7 @@ special moves:
 
       You can’t assign more than one job to a character. If you don’t have enough party members, or choose not to assign a job, treat that job as if it had been assigned and the responsible player had rolled a 6.
     trigger: When you travel through hostile territory
-    effect:
+    procedure:
         choose What is your role in this journey?:
           Quartermaster:
             roll roll+Wis:
@@ -2440,26 +2443,26 @@ special moves:
       * Did we loot a memorable treasure?
       For each “yes” answer everyone marks XP.
     trigger: When you reach the end of a session
-    effect:
+    procedure:
         - choose Choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.:
               Resolve a bond:
                 - resolve bond
                 - change xp by 1
                 - create bond
               Create a new bond: create bond
-              Do not resolve a bond: no effect
+              Do not resolve a bond: do nothing
         - choose Did I fulfill my alignemnt goal?:
             yes: change xp by 1
-            no: no effect
+            no: do nothing
         - choose Did we learn something new and important about the world?:
             yes: change xp by 1
-            no: no effect
+            no: do nothing
         - choose Did we overcome a notable monster or enemy?:
             yes: change xp by 1
-            no: no effect
+            no: do nothing
         - choose Did we loot a memorable treasure?:
             yes: change xp by 1
-            no: no effect
+            no: do nothing
   - name: Level Up
     type: special
     text: >
@@ -2470,7 +2473,7 @@ special moves:
       * If you are the wizard, you also get to add a new spell to your spellbook.
       * Choose one of your stats and increase it by 1 (this may change your modifier). Changing your Constitution increases your maximum and current HP. Ability scores can’t go higher than 18.
     trigger: When you have downtime (hours or days) and XP equal to (or greater than) your current level+7
-    effect:
+    procedure:
       - change xp by (-1*level)-7
       - change level by 1
       - add advanced move
@@ -2494,7 +2497,7 @@ special moves:
       * You gain useful information.
       * You are not entangled, ensorcelled, or tricked.
     trigger: When you return triumphant and throw a big party
-    effect:
+    procedure:
     - choose How much do you spend?:
         100 coins (roll+0): use gear 100 coin
         200 coins (roll+1): [use gear 200 coin, modify all +1 forced forward]
@@ -2517,7 +2520,7 @@ special moves:
       * On a 10+, you find what you’re looking for at a fair price.
       * On a 7–9, you’ll have to pay more or settle for something that’s not exactly what you wanted, but close. The GM will tell you what your options are.
     trigger: When you go to buy something with gold on hand
-    effect:
+    procedure:
       choose Is it something readily available in the settlement you’re in?:
         yes: You can buy it in market price
         no:
@@ -2531,7 +2534,7 @@ special moves:
       After three days of rest you remove one debility of your choice.
       If you’re under the care of a healer (magical or otherwise) you heal a debility for every two days of rest instead.
     trigger: When you do nothing but rest in comfort and safety
-    effect:
+    procedure:
       choose How long do you rest?:
         One day - recover all your HP: change hp by maxHP
         Three days, or two days with a healer - also remove a debility:
@@ -2556,11 +2559,11 @@ special moves:
       * On a 7–9, you’ll have to settle for someone close to what you want or turn them away.
       * On a miss someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
     trigger: When you put out word that you’re looking to hire help
-    effect:
-    - choose Do you make it known that your pay is generous?: { Yes: modify all +1 forced forward, no: no effect }
-      - choose Do you make it known what you’re setting out to do?: { Yes: modify all +1 forced forward, no: no effect }
-      - choose Do you make it known that they’ll get a share of whatever you find?: { Yes: modify all +1 forced forward, no: no effect }
-      - choose Do you have a useful reputation around these parts?: { Yes: modify all +1 forced forward, no: no effect }
+    procedure:
+    - choose Do you make it known that your pay is generous?: { Yes: modify all +1 forced forward, no: do nothing }
+      - choose Do you make it known what you’re setting out to do?: { Yes: modify all +1 forced forward, no: do nothing }
+      - choose Do you make it known that they’ll get a share of whatever you find?: { Yes: modify all +1 forced forward, no: do nothing }
+      - choose Do you have a useful reputation around these parts?: { Yes: modify all +1 forced forward, no: do nothing }
       - roll roll:
           success: You’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
           partial success: You’ll have to settle for someone close to what you want or turn them away.
@@ -2579,7 +2582,7 @@ special moves:
         * Someone has put a price on your head.
         * Someone important to you has been put in a bad spot as a result of your actions.
     trigger: When you return to a civilized place in which you’ve caused trouble before
-    effect:
+    procedure:
       roll roll+Cha:
         success: Word has spread of your deeds and everyone recognizes you.
         partial success:
@@ -2593,7 +2596,7 @@ special moves:
       * If you prepare for a month or longer, take 3 instead.
       When your preparation pays off spend 1 preparation for +1 to any roll. You can only spend one preparation per roll.
     trigger: When you spend your leisure time in study, meditation, or hard practice
-    effect:
+    procedure:
       choose If you prepare for:
         Between a week and a month: hold 3
         More then a month: hold 1
@@ -2619,40 +2622,40 @@ tags:
     text: To use it, you have to be wearing it.
   - tag: <formula> <trigger>
     text: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
-    effect: modify <trigger> <formula>
+    procedure: modify <trigger> <formula>
   - tag: <number> uses
     text: It can only be used n times.
-    effect:
+    procedure:
       - subtract 1 from uses
       - is uses<0:
           yes: remove this from gear
   - tag: use twice
     text: Use two every time.
-    effect:
+    procedure:
       - subtract 1 from uses
       - is uses<0:
           yes: remove this from gear
   - tag: <number> ammo
     text: It counts as ammunition for appropriate ranged weapons. The number indicated does not represent individual arrows or sling stones, but represents what you have left on hand.
-    effect:
+    procedure:
       is ammo=0:
         yes: remove this from gear
   - tag: Forceful
     text: It can knock someone back a pace, maybe even off their feet.
   - tag: <formula> damage
     text: It is particularly harmful to your enemies. When you deal damage, you add n to it.
-    effect: modify once damage <formula>
+    procedure: modify once damage <formula>
   - tag: Ignores Armor
     text: Don’t subtract armor from the damage taken.
-    effect: show "Ignores armor" with "deal damage"
+    procedure: show "Ignores armor" with "deal damage"
   - tag: Messy
     text: It does damage in a particularly destructive way, ripping people and things apart.
   - tag: <number> piercing
     text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    effect: show <number> piercing with "deal damage"
+    procedure: show <number> piercing with "deal damage"
   - tag: Precise
     text: It rewards careful strikes. You use DEX to hack and slash with this weapon, not STR.
-    effect: modify Hack and Slash roll+Str = roll+Dex
+    procedure: modify Hack and Slash roll+Str = roll+Dex
   - tag: Reload
     text: After you attack with it, it takes more than a moment to reset for another attack.
   - tag: Stun
@@ -2671,15 +2674,15 @@ tags:
     text: It’s useful for attacking something in shouting distance.
   - tag: <number> armor
     text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack. It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    effect: modify armor = number
+    procedure: modify armor = number
   - tag: <number> armor
     text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    effect: take +number ongoing to armor
+    procedure: take +number ongoing to armor
   - tag: Clumsy
     text: It’s tough to move around with. -1 ongoing while using it. This penalty is cumulative.
-    effect: take -1 ongoing to all
-  - tag: On use <effect>
-    effect: <effect>
+    procedure: take -1 ongoing to all
+  - tag: On use <procedure>
+    procedure: <procedure>
 equipment:
   - name: coin
     tags: []
@@ -2807,17 +2810,17 @@ equipment:
     weight: 1
     description: Adventuring gear is a collection of useful mundane items such as chalk, poles, spikes, ropes, etc. When you rummage through your adventuring gear for some useful mundane item, you find what you need and mark off a use.
   - name: Bandages
-    tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: no effect }]
+    tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: do nothing }]
     cost: 5
     weight: 0
     description: When you have a few minutes to bandage someone else’s wounds, heal them of 4 damage and expend a use.
   - name: Poultices and Herbs
-    tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: no effect }]
+    tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: do nothing }]
     cost: 10
     weight: 1
     description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
   - name: Healing Potion
-    tags: [1 uses, On use choose are you healing yourself: { yes: { choose are you removeing a debility or healing yourself: { removeing a debility: remove a debility, healing yourself: heal 10 } }, no: no effect }]
+    tags: [1 uses, On use choose are you healing yourself: { yes: { choose are you removeing a debility or healing yourself: { removeing a debility: remove a debility, healing yourself: heal 10 } }, no: do nothing }]
     cost: 50
     weight: 0
     description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
@@ -2884,85 +2887,85 @@ equipment:
 all techniques:
   - name: Flowing
     text: If your attack kills a target, you may immediately attack a new target as if you had gotten a 7-9 on the move you initially used.
-    before: no effect
+    before: do nothing
     after:
       choose did your attack killed the target?:
-        no: no effect
+        no: do nothing
         yes:
           choose do you want to immediately attack a new target as if you had gotten a 7-9 on the move you initially used?:
-            no: no effect
+            no: do nothing
             # This can only happen with melee attack, so this would act like Hack and Slash 
             yes: [deal damage, take damage]
   - name: Freezing
     text: Your attack freezes and shatters a portion of your opponent’s armor. After you deal your damage, reduce their armor by 1 until they repair it.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
   - name: Galvanic
     text: Electricity courses through your blade, numbing one of your target’s limbs.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
   - name: Void-Edged
     text: The edge of your weapon hums with an unearthly light. You may slice through inanimate objects with ease and add the ‘messy’ tag to your attack.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
   - name: Mirage
     text: You create illusions of yourself that strike additional enemies near your target. Illusions deal your damage but do not apply any techniques.
-    before: no effect
+    before: do nothing
     after: deal damage
   - name: Tethering
     text: Your attack pins your target’s shadow to the ground, preventing them from moving more than a few feet from their current location.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
   - name: Elaborate
     text: >
       When you apply this technique, roll+dex.
         * On a 10+, deal an additional 1d8 damage.
-        * On a 7-9, this technique has no effect, but it looks really cool!
+        * On a 7-9, this technique has do nothing, but it looks really cool!
         * On a miss, your showboating costs you in some substantial way – the GM will tell you how.
     before:
       roll roll+dex:
         success: take +1d8 forward to damage
-        partial success: this technique has no effect, but it looks really cool!
+        partial success: this technique has do nothing, but it looks really cool!
         miss: your showboating costs you in some substantial way – the GM will tell you how.
-    after: no effect
+    after: do nothing
   - name: Earthshaker
     text: Your attack concludes with an eruption of stone and earth from the ground, launching your target into the air.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
   - name: Burning
     text: Your attack deals an extra 1d4 damage and lights anything flammable.
     before: take +1d4 forward to damage
     after: anything flammable is lit up
   - name: Soul-Siphoning
     text: Your attack heals you for 1d4. Heal 1d8 instead if this attack kills your target.
-    before: no effect
+    before: do nothing
     after:
       choose did the attack kill the target?:
         yes: heal 1d8
         no: heal 1d4
   - name: Torrential
     text: Your attack ends with a flurry of strikes that your opponent must dedicate effort to blocking or avoiding. If they instead attack you in response to your attack, deal your damage again (this does not apply techniques).
-    before: no effect
+    before: do nothing
     after:
       choose did your opponent attack you?:
         yes: deal damage
-        no: no effect
+        no: do nothing
   - name: Burst
     text: Your attack deals an additional 1d4 damage and gains the ‘forceful’ tag.
     before: take +1d4 forward to damage
-    after: no effect
+    after: do nothing
   - name: Quicksilver
     text: Your blade cuts faster than the eye can see, preventing your opponent from mounting a proper defense. Gain 2 piercing on your attack.
     before: take +2 forward to piercing
-    after: no effect
+    after: do nothing
   - name: Warding
     text: Your attack creates a ring of light around you and your target that other creatures (and their projectiles) cannot cross.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
   - name: Dust Devil
     text: Your attack kicks up a small tornado of dust and grit at your target’s feet, obscuring visibility.
-    before: no effect
-    after: no effect
+    before: do nothing
+    after: do nothing
 cleric spells:
   - name: Light
     level: 0
