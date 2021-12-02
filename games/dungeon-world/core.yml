@@ -1,3 +1,4 @@
+# TODO remove <formula> parameters and use actual types
 game: dungeon-world
 rulebook: core
 parser: 1.0
@@ -16,11 +17,14 @@ mechanisms: &mechanisms
       moves 2-5: move array
       moves 6-10: move array
     character fields: &moves-character-fields
-      moves: start as basic moves and special moves and starting moves
+      moves: start as basic moves and special moves
     formulas: &moves-formulas
       moves 2-10: moves 2-5 and moves 6-10
     procedures: &moves-procedures
-      trigger <move>: execute move.procedure
+      trigger <move>:
+        - define moveName to be move.name
+        - define moveType to be move.type
+        - execute move.procedure
       gain <move>:
         - add move to moves
         - is move.trigger=instant:
@@ -31,8 +35,10 @@ mechanisms: &mechanisms
           yes: gain choice from moves 2-5
           no: gain choice from moves 2-10
     hooks:
+      after character creation:
+        for move in starting moves: gain move
       after value change:
-        trigger move for everty move in moves where move.trigger starts with on and calc(part 3..end of move.trigger)
+        for move in moves where move.trigger starts with on and (part 3..end of move.trigger) as boolean: trigger move
   description: &description
     playbook fields: &description-playbook-fields
       in a sentence: text
@@ -51,18 +57,20 @@ mechanisms: &mechanisms
     character fields: &expirience-character-fields
       level: start as 1
       xp: start as 0
+    formulas:
+      level up allowed: level + 7 <= xp
   roll: &roll
     global fields: &roll-global-fields
       initial stats: [8, 9, 12, 13, 15 ,16]
     choices: &roll-choices
-      stat: assign each initial stats to strength, dexterity, constitution, intelligence, wisdom, charisma
+      stat: assign initial stats each to strength, dexterity, constitution, intelligence, wisdom, charisma
     character fields: &roll-character-fields
-      strength: start as stat.strength choice
-      dexterity: start as stat.dexterity choice
-      constitution: start as stat.constitution choice
-      intelligence: start as stat.intelligence choice
-      wisdom: start as stat.wisdom choice
-      charisma: start as stat.charisma choice
+      strength: start as stat choice.strength 
+      dexterity: start as stat choice.dexterity
+      constitution: start as stat choice.constitution
+      intelligence: start as stat choice.intelligence
+      wisdom: start as stat choice.wisdom
+      charisma: start as stat choice.charisma
       weak: start as false
       shakey: start as false
       sick: start as false
@@ -70,15 +78,21 @@ mechanisms: &mechanisms
       confused: start as false
       scarred: start as false
     formulas: &roll-formulas
-      modifier for <number:stat> (number): { stat<=8: -1, 9<=stat<=12: 0, 13<=stat<=15: 1, 16<=stat<=17: 2, 18<=stat: 3 }
-      <boolean:debility> modifier (number): { debility: -1, else: 0 }
+      modifier for <number:stat> (number): 
+        switch stat:
+          "0..8":  -1
+          "9..12":  0
+          "13..15": 1
+          "16..17": 2
+          "18..20": 3
+      <boolean:debility> modifier (number): "debility ? -1 : 0"
       roll: 2d6
-      str: (modifier for strength) + (weak modifier)
-      dex: (modifier for dexterity) + (shakey modifier)
-      con: (modifier for constitution) + (sick modifier)
-      int: (modifier for intelligence) + (stunned modifier)
-      wis: (modifier for wisdom) + (confused modifier)
-      cha: (modifier for charisma) + (scarred modifier)
+      str: (modifier for strength)     + (weak      modifier)
+      dex: (modifier for dexterity)    + (shakey    modifier)
+      con: (modifier for constitution) + (sick      modifier)
+      int: (modifier for intelligence) + (stunned   modifier)
+      wis: (modifier for wisdom)       + (confused  modifier)
+      cha: (modifier for charisma)     + (scarred   modifier)
     procedures: &roll-procedures
       roll <formula> {options}:
         switch formula:
@@ -88,7 +102,7 @@ mechanisms: &mechanisms
               - options.miss
               - options.failure
               - Oh oh... The GM will tell you what just happened, but at least you got XP!
-          "7..9": [options."partial success", options.hit]
+          "7..9": [options.partial success, options.hit]
           "10..15": [options.success, options.hit]
       take a debility:
         choose which debility do you want to take:
@@ -106,21 +120,20 @@ mechanisms: &mechanisms
           Stunned: set stunned = false
           Confused: set confused = false
           Scarred: set scarred = false
-      take <formula> forward <trigger>: modify once <trigger> <formula>
-      take <formula> ongoing <trigger>: modify <trigger> <formula>
+      take <formula> forward to <string:filter>: modify 1 <string:filter> <formula>
+      take <formula> ongoing to <string:filter>: modify <string:filter> <formula>
   holds: &holds
     types: &holds-types
       hold: { name: text, options: procedure map }
     character fields: &holds-character-fields
       holds: start as []
     procedure: &holds-procedures
-      hold <count> <name> {options}:
+      hold <number:count=1> <string:name=hold> {options}:
         repeat count times: add {name,options} to holds
-      hold <count> <name>: hold count name {}
-      hold <count> {options}: hold count move-name options
-      hold <count>: hold count {}
-      spend <name> to {options}: set item.options = options for item in holds where item.name = name
-      spend to {options}: spend move-name to options
+      spend a <string:name=hold> to {options}:
+        for hold in holds where hold.name = name:
+          set hold.options = options
+      spend <name=hold>: remove (first hold in holds where hold.name = name) from holds
   damage: &damage
     playbook fields: &damage-playbook-fields
       base damage: formula
@@ -132,10 +145,14 @@ mechanisms: &mechanisms
     procedures: &damage-procedures
       deal <formula>: show <formula>
       take damage:
-        - reduce hp by (input formula damage)-((input boolean ignore armor?)?0:max(0,(armor)-(input number piercing))
+        - "reduce hp by ((formula input damage) as number) - ((boolean input ignore armor?) ? 0 : max of 0 and (armor - number input piercing))"
         - is hp<0:
-          yes: set hp=0
+          yes: set hp = 0
           no: do nothing
+      take <number:damage> damage [that ignores armor]:
+        is that ignore armor:
+          yes: reduce hp by formula
+          no: reduce hp by (formula - armor)
       heal <formula>: add formula to hp
   race: &race
     types: &race-types
@@ -143,12 +160,12 @@ mechanisms: &mechanisms
     playbook fields: &race-playbook-fields
       race options: race array
     choices: &race-choices
-      race:
-        choose: from race options
-        after: add race choice.move to moves
+      race: from race options
     character fields: &race-character-fields
       race: start as race.name choice
-      race move: start as reace.move choice 
+      race move: start as reace.move choice
+    hooks:
+      after character creation: add race choice.move to moves
   alignment: &alignment
     types: &alignment-types
       alignment: { name: text, goal: text }
@@ -157,16 +174,18 @@ mechanisms: &mechanisms
     choices: &alignment-choices
       alignment: from alignment options
     character fields: &alignment-character-fields
-      alignment: start as alignment.name choice
-      alignment goal: start as alignment.goal choice
+      alignment: start as alignment choice.name
+      alignment goal: start as alignment choice.goal
+    formulas:
+      alignment met (boolean): boolean input Did you `alignment.goal`?
   bonds: &bonds
     playbook fields: &bonds-playbook-fields
       bond options: text array
     character fields: &bonds-character-fields
       bonds: start as []
     procedures: &bonds-procedures
-      add bond: add free choice from bond options to bonds
-      resolve bond: remove choice from bonds
+      add bond: add (choice from bond options) to bonds
+      resolve bond: remove (choice from bonds) from bonds
   equipment: &equipment
     types: &equipment-types
       tag: { tag: text, text: text, procedure: procedure }
@@ -181,20 +200,23 @@ mechanisms: &mechanisms
       gear: from starting gear options
     character fields: &equipment-character-fields
       gear: start as gear choice
+      ignored tags: start as []
     formulas: &equipment-formulas
       weight (number): sum of equipment.weight for equipment in gear
-      regular <number> <text:name>: array of number equipment where name is <name>
-      regular <text:name>: regular 1 name
+      regular <number=1> <text:name> (equipment array): array of number equipment where equipment.name = name
     procedures: &equipment-procedures
-      # TODO do I need the "gear" word here?
-      use <amount> gear tagged <tag>:
-        repeat amount times:
-          for tag in (choice equipment from gear where equipment.tags inlucde tag).tags: execute tag.procedure 
-      use <amount> gear <name>:
-        repeat amount times:
-          for tag in (choice equipment from gear where equipment.name is name).tags: execute tag.procedure
-      use gear with tagged <tag>: use 1 gear tagged tag
-      use <name>: use 1 gear <name>
+      use <amount=1> tagged <tag>:
+        for tag in (choice amount from (for equipment in gear where tag in equipment.tags)).tags:
+          is tag.name in ignored tags:
+            yes: do nothing
+            no: execute tag.procedure
+      use <amount=1> <name>:
+        for tag in (choice amount from (for equipment in gear where equipment.name is name)).tags:
+          is tag.name in ignored tags:
+            yes: do nothing
+            no: execute tag.procedure
+      ignore tag <tag>: add tag.name to ignored tags
+      aknoledge tag <tag>: remove tag.name to ignored tags
 playbooks:
   arcane duelist:
     in a sentence: A warrior that incorperates magic into his fighting style
@@ -216,14 +238,14 @@ playbooks:
         move:
           type: race
           text: You descend from an ancient martial tradition. Gain +1 to spout lore on anything related to warfare.
-          trigger: constant
-          procedure: take +1 ongoing to spout lore on anything related to warfare.
+          trigger: instant
+          procedure: take +1 ongoing to moveName = (spout lore) and it relates to warfare
       - name: Human
         move:
           type: race
           text: Your fighting style is showy and impressive. Gain +1 forward to parley with anyone who has seen you fight.
           trigger: After someone saw you fight.
-          procedure: take +1 forward to parley with them.
+          procedure: take +1 forward to parley and you saw them fight
     alignment options:
       - name: good
         goal: Slay a menace to the innocent.
@@ -255,8 +277,10 @@ playbooks:
         trigger: When you attempt to incorporate magic into a melee attack
         procedure:
           roll roll+int:
-            success: [start applying technic, deal damage, finish applying technic]
-            partial success: [start applying technic, deal damage, take damage, finish applying technic]
+            success:
+              apply techniques to: deal damage
+            partial success:
+              apply techniques to: deal damage then take damage
       - name: Throw Down The Gauntlet
         type: starting
         text: >
@@ -275,9 +299,10 @@ playbooks:
                   success: choose 2
                   partial success: choose 1
           - options:
-            You take +1 ongoing against them until they defeat you: take +1 ongoing against them until they defeat you
-            They lose the respect of their peers and underlings: They lose the respect of their peers and underlings
-            They retreat: They retreat
+              # TODO inapplicable modifier
+              You take +1 ongoing against them until they defeat you: take +1 ongoing against them until they defeat you
+              They lose the respect of their peers and underlings: They lose the respect of their peers and underlings
+              They retreat: They retreat
       - name: The Riddle of Steel
         type: starting
         text: >
@@ -287,19 +312,20 @@ playbooks:
               * What is this person trying to hide?
         trigger: When you cross swords with a humanoid opponent
         procedure:
-          - take +1 forward to discern realities against them.
+          - take +1 forward to moveName = "discern realities" and against a humanoid opponent you crossed sword with
+          # TODO inapplicable modifier
           - take +[What is this person about to do?, What emotion drives this person?, What is this person trying to hide?] forward to discern realities options against them
       - name: Student of the Blade
         type: starting
         text: Begin play with 4 techniques.
         trigger: instant
-        procedure: add choose 4 from all techinques to aquired techniques
+        procedure: add (choice 4 from all techinques) to aquired techniques
     moves 2-5:
       - name: Armored
         type: advanced
         text: Ignore the clumsy tag on any armor you wear.
-        trigger: constant
-        procedure: ignore tag for every tag in eqipment.tags for every eqipment in gear where tag.name = Clumsy
+        trigger: instant
+        procedure: ignore tag clumsy
       - name: Wind Slash
         type: advanced
         text: >
@@ -312,21 +338,28 @@ playbooks:
         trigger: When you attack at near range with blades of cutting air
         procedure:
           roll roll+int:
-            success: [apply technique before, deal damage, apply technique after]
+            success: 
+              apply techniques to: deal damage
             partial success:
               choose:
-                You have to move to get a clear shot, placing you in danger.: [apply technique before, deal damage, apply technique after]
-                Do not deal your damage.: [apply technique before, apply technique after]
+                You have to move to get a clear shot, placing you in danger.:
+                  - apply techniques to: deal damage
+                  - You're in danger
+                Do not deal your damage.:
+                  apply techniques to: do nothing
                 Do not apply any techniques.: deal damage
       - name: To The Death
         type: advanced
         text: You have +1 armor against any opponent that you have challenged to a duel.
         trigger: constant
-        procedure: take +1 to armor ongiong against any opponent that you have challenged to a duel.
+        # TODO inapplicable modifier
+        procedure: take +1 to armor ongiong on you have challenged them to a duel.
       - name: Floating Step
         type: advanced
         text: When you get a 10+ with arcane bladework, take +1 forward to any defy danger rolls to navigate the battlefield.
+        # TODO illegal trigger
         trigger: on "Arcane Bladework".roll>=10
+        # TODO inapplicable modifier
         procedure: take +1 forward to any defy danger to navigate the battlefields
       - name: Know Your Enemy
         type: advanced
@@ -344,7 +377,7 @@ playbooks:
               patrial success: choose 1
           - options:
               Taunt your rival into revealing something they did not mean to.: Taunt your rival into revealing something they did not mean to.
-              Take +1 forward against your rival.: take +1 forward against your rival
+              Take +1 forward against your rival.: take +1 forward on against the rival you taunted
               Gain a key insight into your rival’s fighting style.: Gain a key insight into your rival’s fighting style.
       - name: Flawless Bladework
         type: advanced
@@ -356,13 +389,15 @@ playbooks:
         trigger: When you attempt to incorporate magic into a melee attack
         procedure: 
           roll roll+int:
-            success: [apply technique1 before, apply technique2 before, deal damage, apply technique1 after, apply technique2 after]
-            patrial success: [apply technique before, deal damage, apply technique after, take damage]
+            success:
+              apply 2 techniques to: deal damage
+            patrial success:
+              apply techniques to: deal damage and take damage
       - name: Blade Artist
         type: advanced
         text: Gain 3 techniques
         trigger: instant
-        procedure: add choose 3 from all techinques to aquired techniques
+        procedure: add (choice 3 from all techinques) to aquired techniques
       - name: Show Off
         type: advanced
         text: >
@@ -380,7 +415,11 @@ playbooks:
           options:
             You have their full and complete attention.: You have their full and complete attention.
             The crowd does not keep their attention on you and demand an encore after you’re done.: The crowd does not keep their attention on you and demand an encore after you’re done.
-            The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest: The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest
+            The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest:
+              - The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest
+              # TODO inapplicable modifier
+              - dont: take -1 ongoing to using techniques until rest
+        # TODO multi-class move
       - name: Multilass Dabbler
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
@@ -390,13 +429,14 @@ playbooks:
         type: advanced
         text: Gain an additional three techniques.
         trigger: instant
-        procedure: add choose 3 from all techinques to aquired techniques
+        procedure: add (choice 3 from all techinques) to aquired techniques
       - name: Two Men Enter, One Man Leaves
         type: advanced
         replaces: To The Death
         text: You have +1 armor. Against any opponent that you have challenged to a duel (whether they declined or accepted) you have +2 armor instead.
-        trigger: constant
+        trigger: intstant
         procedure:
+          # TODO inapplicable modifier
           - take +1 to armor ongoing
           - take +1 to armor ongiong against any opponent that you have challenged to a duel.
       - name: Master’s Bladework
@@ -410,20 +450,9 @@ playbooks:
         procedure:
           roll roll+int:
             success:
-              - apply technique1 before
-              - apply technique2 before
-              - apply technique3 before
-              - deal damage
-              - apply technique1 after
-              - apply technique2 after
-              - apply technique3 after
+              apply 3 techniques to: deal damage
             patrial success:
-              - apply technique1 before
-              - apply technique2 before
-              - deal damage
-              - take damage
-              - apply technique1 after
-              - apply technique2 after
+              apply 2 techniques to: deal damage and take damage
       - name: Hurricane Slash
         type: advanced
         replaces: Wind Slash
@@ -438,32 +467,22 @@ playbooks:
         procedure:
           roll roll+int:
             success:
-              - apply technique1 before
-              - apply technique2 before
-              - deal damage
-              - apply technique1 after
-              - apply technique2 after
+              apply 2 techniques to: deal damage
             partial success:
               choose:
                 You have to move to get a clear shot, placing you in danger.:
-                  - apply technique1 before
-                  - apply technique2 before
-                  - deal damage
-                  - apply technique1 after
-                  - apply technique2 after
+                  - apply 2 techniques to: deal damage
                   - You have to move to get a clear shot, placing you in danger.
                 Do not deal your damage.:
-                  - apply technique1 before
-                  - apply technique2 before
-                  - apply technique1 after
-                  - apply technique2 after
+                  apply 2 techniques to: do nothing
                 Do not apply any techniques.: deal damage
       - name: Dance With The Sky
         type: advanced
         replaces: Floating Step
         text: You move with inhuman grace and are capable of leaping distances that would be impossible for mere mortals. In addition, when you get a 10+ with arcane bladework, take +1 ongoing to any defy danger rolls to navigate the battlefield until the battle ends.
         trigger: on arcane bladework.roll >= 10
-        procedure: take +1 ongoing to Defy Danger to navigate the battlefield until the battle ends.
+        # TODO inapplicable modifier
+        procedure: take +1 ongoing to moveName = Defy Danger and to navigate the battlefield until the battle ends
       - name: Steel Tells No Lies
         type: advanced
         replaces: Know Your Enemy
@@ -482,7 +501,7 @@ playbooks:
           - options:
               Gain a flash of insight as to what your rival is thinking at this very moment.: Gain a flash of insight as to what your rival is thinking at this very moment.
               Take +1 forward against your rival and, if you could already see them, you realize a way to isolate them and yourself from anyone who would interfere with your duel.:
-                  - take +1 forward against your rival
+                  - take +1 forward on against the person who wronged you
                   - choose could you already see them:
                       yes: you realize a way to isolate them and yourself from anyone who would interfere with your duel.
                       no: do nothing
@@ -493,7 +512,8 @@ playbooks:
         text: >
           When you enter a settlement for the first time, roll +cha.
             * On a 10+, you are recognized for your deeds and the common people either welcome you with open arms or acquiesce to your demands with fear as appropriate.
-            * On a 7-9, your name gets you a meeting with anyone but no guaranteed favors. On a miss, somebody has a bone to pick with you.
+            * On a 7-9, your name gets you a meeting with anyone but no guaranteed favors.
+            * On a miss, somebody has a bone to pick with you.
         trigger: When you enter a settlement for the first time
         procedure:
           roll roll+cha:
@@ -505,7 +525,9 @@ playbooks:
         text: You take on a student to carry on the techniques you have learned. The student counts as a hireling with cost (learning the art of the blade), loyalty 2, sentry 2, and man at arms 2, and first aid 1. If you die, your student inherits your accumulated knowledge and becomes a PC with a character sheet identical to yours. They must achieve some great victory in their own right before they can take on a student of their own.
         trigger: instant
         procedure:
+          # TODO inapplicable change - create hirelings mechanism
           - add {name=student,loyalty=2,sentry=2,man at arms=2,first aid=2} to hirelings
+      # TODO multi-class move
       - name: Multilass Initiate
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
@@ -519,12 +541,14 @@ playbooks:
             before: procedure
             after: procedure
         procedures:
-          apply technique before:
-            - set technique = choose from aquired techniques
-            - execute technique.before
-          apply technique after:
-            - execute technique.after
-            - set technique = null
+          apply <number:count=1> techniques to {procedure}:
+            - apply (choice count from technique from aquired techniques) to: execute procedure
+          apply <techniques array:techniques> to {procedure}:
+            - for technique in techniques:
+                execute technique.before
+            - execute procedure
+            - for technique in techniques:
+                execute technique.after
         global fields:
           all techniques: large
         character fields:
@@ -556,7 +580,7 @@ playbooks:
           trigger: At the beginning of each session
           procedure:
             choose Did you answer the GM's question:
-              yes: change xp by 1
+              yes: add 1 to xp
               no: do nothing
     alignment options:
       - alignemnt: chaotic
@@ -589,28 +613,23 @@ playbooks:
           * Conquest
           * Riches and property
           * Fame and glory
-        trigger: While pursuing one of your appetites
+        trigger: instant
         procedure:
-          modify roll d6+d8 ongoing:
-            afterroll:
-              is the d6 > the d8:
-                yes: The GM will introduce a complication or danger that comes about due to your heedless pursuits.
-                no: do nothing
-        on move addition:
-          - add 2 from appetite options to appetites Choose two appetites
+          - add choice 2 from appetite options to appetites
       The Upper Hand:
         text: >
           You take +1 ongoing to last breath rolls. When you take your last breath, on a 7–9 you make an offer to Death in return for your life. If Death accepts he will return you to life. If not, you die.
         trigger: constant
         procedure: 
-          - modify last breath +1 ongoing
-          - modify last breath replace:
-              partial succes: You make and offer to Death
+          - take +1 ongoing to moveName = Last Breath
+          # TODO inapplicable modifier
+          - take +[] ongoing to moveName = Last Breath
       Musclebound:
         text: >
           While you wield a weapon it gains the forceful and messy tags.
         trigger: constant
-        procedure: modify equip(weapon) +forceful +messy ongoing
+        # TODO inapplicable modifier
+        procedure: take equip(weapon) +forceful +messy ongoing
       What Are You Waiting For:
         text: >
           When you cry out a challenge to your enemies, roll+Con.
@@ -621,53 +640,93 @@ playbooks:
           roll roll+Con:
             success:
               - They treat you as the most obvious threat to be dealt with and ignore your companions.
-              - modify damage against them +2 ongoing
+              # TODO inapplicable modifier
+              - take +2 to damage and against them
           patrial success: Only a few (the weakest or most foolhardy among them) fall prey to your taunting.
     moves 2-5:
       - name: Still Hungry
         type: advanced
         text: Choose an additional appetite.
+        trigger: instant
+        procedure: add choose from (appetite options - appetites) to appetites
+        # TODO multi-class move
       - name: Appetite for Destruction
         type: advanced
         text: Take a move from the fighter, bard or thief class list. You may not take multiclass moves from those classes.
       - name: My Love For You Is Like a Truck
         type: advanced
         text: When you perform a feat of strength, name someone present whom you have impressed and take +1 forward to parley with them.
+        trigger: When you perform a feat of strength
+        procedure:
+          - name someone present whom you have impressed
+          - take +1 forward to moveName = parley and with the someone whom you have impressed
       - name: What Is Best In Life
         type: advanced
         text: At the end of a session, if during this session you have crushed your enemies, seen them driven before you, or have heard the lamentations of their kinfolk mark XP.
+        trigger: At the end of a session
+        procedure:
+          is have you crushed your enemies, seen them driven before you, or have heard the lamentations of their kinfolk during this session:
+            yes: add 1 to xp
+            no: do nothing
       - name: Wide Wanderer
         type: advanced
         text: You’ve traveled the wide world over. When you arrive someplace ask the GM about any important traditions, rituals, and so on, they’ll tell you what you need to know.
+        trigger: When you arrive someplace
+        procedure: ask the GM about any important traditions, rituals, and so on, they’ll tell you what you need to know
       - name: Usurper
         type: advanced
         text: When you prove yourself superior to a person in power, take +1 forward with their followers, underlings, and hangers on.
+        trigger: When you prove yourself superior to a person in power
+        procedure: take +1 forward on their followers, underlings, and hangers on
       - name: Khan of Khans
         type: advanced
         text: Your hirelings always accept the gratuitous fulfillment of one of your appetites as payment.
+        trigger: intstant
+        # TODO hirelings
+        procedure: Your hirelings always accept the gratuitous fulfillment of one of your appetites as payment.
       - name: Samson
         type: advanced
         text: You may take a debility to immediately break free of any physical or mental restraint.
+        trigger: When you take a debility to immediately break free of any physical or mental restraint.
+        procedure:
+          - take a debility
+          - immediately break free of any physical or mental restraint.
       - name: Smash!
         type: advanced
         text: >
           When you hack and slash, on a 12+ deal your damage and choose something physical your target has (a weapon, their position, a limb): they lose it.
-      - name: Samson
-        type: advanced
-        text: You may take a debility to immediately break free of any physical or mental restraint.
+        # TODO inapplicable trigger
+        trigger: on >12 on Hack and Slahs
+        procedure: >
+          choose something physical your target has (a weapon, their position, a limb): they lose it.
       - name: Indestructible Hunger
         type: advanced
-        text: When you take damage you can choose to take 1 ongoing until you sate one of your appetites instead of taking the damage. If you already have this penalty you cannot choose this option.
+        text: When you take damage you can choose to take -1 ongoing until you sate one of your appetites instead of taking the damage. If you already have this penalty you cannot choose this option.
+        # TODO inapplicable trigger
+        trigger: When you take damage
+        procedure: you can choose to take -1 ongoing until you sate one of your appetites instead of taking the damage. If you already have this penalty you cannot choose this option.
+          # TODO inapplicable modifier: also apply only once
       - name: Eye for Weakness
         type: advanced
         text: When you discern realities add “What here is weak or vulnerable?” to the list of questions you can ask.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take +[“What here is weak or vulnerable?”] to discern realities list
       - name: On the Move
         type: advanced
         text: When you defy a danger caused by movement (maybe falling off a narrow bridge or rushing past an armed guard) take +1.
+        # TODO inapplicable trigger
+        trigger: Before you defy a danger
+        is it caused by movement:
+          yes: take +1 forward
+          no: do nothing
     moves 6-10:
       - name: A Good Day to Die
         type: advanced
         text: As long as you have less than your Con in current HP (or 1, whichever is higher) take +1 ongoing.
+        trigger: instant
+        procedure: take +1 forward to all and hp < max(con, 1)
+        # TODO multi-class move
       - name: Kill ‘em All
         type: advanced
         requires: Appetite for Destruction
@@ -680,18 +739,48 @@ playbooks:
             On a 7–9 one or the other.
               * Your allies are rallied and take +1 forward
               * Your enemies feel fear and act accordingly (avoiding you, hiding, attacking with fear driven abandon)
+        trigger: When you enter battle with a show of force (a shout, a rallying cry, a battle dance)
+        procedure:
+          roll roll+con:
+            success:
+              - Your allies are rallied and take +1 forward
+              - Your enemies feel fear and act accordingly (avoiding you, hiding, attacking with fear driven abandon)
+            partial success:
+              choose one or the other:
+                Your allies are rallied and take +1 forward: Your allies are rallied and take +1 forward
+                Your enemies feel fear and act accordingly (avoiding you, hiding, attacking with fear driven abandon): Your enemies feel fear and act accordingly (avoiding you, hiding, attacking with fear driven abandon)
       - name: Mark of Might
         type: advanced
         text: When you take this move and spend some uninterrupted time reflecting on your past glories you may mark yourself with a symbol of your power (a long braid tied with bells, ritual scars or tattoos, etc.) Any intelligent mortal creature who sees this symbol knows instinctively that you are a force to be reckoned with and treats you appropriately.
+        trigger: When you take this move and spend some uninterrupted time reflecting on your past glories
+        procedure: you may mark yourself with a symbol of your power (a long braid tied with bells, ritual scars or tattoos, etc.) Any intelligent mortal creature who sees this symbol knows instinctively that you are a force to be reckoned with and treats you appropriately.
       - name: More! Always More!
         type: advanced
         text: When you satisfy an appetite to the extreme (destroying something unique and significant, gaining enormous fame, riches, power, etc.) you may choose to resolve it. Cross it off the list and mark XP. While you may pursue that appetite again, you no longer feel the burning desire you once did. In its place, choose a new appetite from the list or write your own.
+        trigger: When you satisfy an appetite to the extreme (destroying something unique and significant, gaining enormous fame, riches, power, etc.)
+        procedure:
+          choose do you want to resolve it:
+            yes:
+              - remove (choose from appetites) from appetites
+              - add 1 to xp
+              - While you may pursue that appetite again, you no longer feel the burning desire you once did.
+              - add (choose from appetite options - appetites) to appetites
       - name: The One Who Knocks
         type: advanced
         text: When you defy danger, on a 12+ you turn the danger back on itself, the GM will describe how.
+        # TODO inapplicable trigger
+        trigger: on Defy Danger > 12
+        procedure: you turn the danger back on itself, the GM will describe how.
       - name: Healthy Distrust
         type: advanced
         text: Whenever the unclean magic wielded by mortal men causes you to defy danger, treat any result of 6 as a 7–9.
+        # TODO inapplicable trigger
+        trigger: on Defy Danger
+        procedure:
+          choose is the cause of the danger in unclean magic:
+            # TODO inapplicable modifier
+            yes: take 6< as 7-9 forward to all
+            no: do nothing
       - name: For the Blood God
         type: advanced
         text: >
@@ -700,6 +789,12 @@ playbooks:
             On a 10+ the GM will grant you insight into your current trouble or a boon to help you.
             On a 7–9 the sacrifice is not enough and your gods take of your flesh as well, but still grant you some insight or boon.
             On a miss, you earn the ire of the fickle spirits.
+        trigger: When you sacrifice smoething your gods value as per your rites and rituals
+        procedure:
+          roll roll+wis:
+            success: the GM will grant you insight into your current trouble or a boon to help you.
+            partial success: the sacrifice is not enough and your gods take of your flesh as well, but still grant you some insight or boon.
+            miss: you earn the ire of the fickle spirits.
     mechanisms:
       description:
         playbook fields:
@@ -728,12 +823,22 @@ playbooks:
               procedure:
                 is weight<load&no_armor: modify armor +1 ongoing
       roll:
-        global fields: << *roll-global-fields
+        global fields:
+          << *roll-global-fields
+          appetite options: 
+            - Pure destruction
+            - Power over others
+            - Mortal pleasures
+            - Conquest
+            - Riches and property
+            - Fame and glory
         choices: << *roll-choices
-        character fields: << *roll-character-fields
+        character fields:
+          << *roll-character-fields
+          appetites: start as []
         formulas:
           << *roll-formulas
-          roll: input boolean "Are you pursuing an appetite?"?d6+d8:2d6
+          roll: "(input boolean are you pursuing an appetite?) ? d6+d8 : 2d6"
         procedures:
           roll <formula> {options}:
             - roll <formula> {options}:
@@ -822,6 +927,17 @@ playbooks:
             Then roll+Cha.
               On a 10+, the ally gets the selected effect.
               On a 7-9, your spell still works, but you draw unwanted attention or your magic reverberates to other targets affecting them as well, GM’s choice.
+        trigger: When you weave a performance into a basic spell
+        procedure:
+          - choose an ally and an effect:
+              Heal 1d8 damage: define selected effect to be They heal 1d8 damage
+              +1d4 forward to damage: define selected effect to be They +1d4 forward to damage
+              Their mind is shaken clear of one enchantment: define selected effect to be Their mind is shaken clear of one enchantment
+              The next time someone successfully assists the target with aid, they get +2 instead of +1: define selected effect to be The next time someone successfully assists the target with aid, they get +2 instead of +1
+          - roll roll+cha:
+              hit: the ally gets the selected effect.
+              partial success: you draw unwanted attention or your magic reverberates to other targets affecting them as well
+      # TODO missing instant effect on character creation
       - name: Bardic Lore
         type: starting
         text: >
@@ -834,6 +950,8 @@ playbooks:
             * Legends of Heroes Past
             * Gods and Their Servants
           When you first encounter an important creature, location, or item (your call) covered by your bardic lore you can ask the GM any one question about it; the GM will answer truthfully. The GM may then ask you what tale, song, or legend you heard that information in.
+        trigger: When you first encounter an important creature, location, or item (your call) covered by your bardic lore
+        procedure: you can ask the GM any one question about it; the GM will answer truthfully. The GM may then ask you what tale, song, or legend you heard that information in.
       - name: Charming and Open
         type: starting
         text: >
@@ -843,43 +961,87 @@ playbooks:
             * How can I get you to ____?
             * What are you really feeling right now?
             * What do you most desire?
+        trigger: When you speak frankly with someone
+        procedure:
+          - you can ask their player a question from the list below. They must answer it truthfully, then they may ask you a question from the list (which you must answer truthfully)
+          - choose what is your question:
+              Whom do you serve?: Whom do you serve?
+              What do you wish I would do?: What do you wish I would do?
+              How can I get you to ____?: How can I get you to ____?
+              What are you really feeling right now?: What are you really feeling right now?
+              What do you most desire?: What do you most desire?
       - name: A Port in the Storm
         type: starting
         text: When you return to a civilized settlement you’ve visited before, tell the GM when you were last here. They’ll tell you how it’s changed since then.
+        trigger: When you return to a civilized settlement you’ve visited before
+        procedure: tell the GM when you were last here. They’ll tell you how it’s changed since then.
     moves 2-5:
       - name: Healing Song
         type: advanced
         text: When you heal with arcane art, you heal +1d8 damage.
+        trigger: intstant
+        # TODO inapplicable modifier
+        procedure: take +[] to moveName = "Arcane Art" and
       - name: Vicious Cacophony
         type: advanced
         text: When you grant bonus damage with arcane art, you grant an extra +1d4 damage.
+        trigger: intstant
+        # TODO inapplicable modifier
+        procedure: take +[] to moveName = "Arcane Art" and
       - name: It Goes To Eleven
         type: advanced
         text: >
           When you unleash a crazed performance (a righteous lute solo or mighty brass blast, maybe) choose a target who can hear you and roll+Cha.
             * On a 10+ the target attacks their nearest ally in range.
             * On a 7–9 they attack their nearest ally, but you also draw their attention and ire.
+        trigger: When you unleash a crazed performance (a righteous lute solo or mighty brass blast, maybe)
+        procedure:
+          - choose a target that can hear you.
+          - roll roll+cha:
+              hit: the target attacks their nearest ally in range.
+              partial success: you also draw their attention and ire.
       - name: Metal Hurlant
         type: advanced
         text: >
           When you shout with great force or play a shattering note choose a target and roll+Con.
             * On a 10+ the target takes 1d10 damage and is deafened for a few minutes.
             * On a 7–9 you still damage your target, but it’s out of control: the GM will choose an additional target nearby.
+        trigger: When you shout with great force or play a shattering note
+        procedure:
+          - choose a target
+          - roll roll+con:
+              hit:deal 1d10
+              success: the target is deafened for a few minutes
+              partial success: "it’s out of control: the GM will choose an additional target nearby."
       - name: A Little Help From My Friends
         type: advanced
         text: When you successfully aid someone you take +1 forward as well.
+        # TODO inapplicable trigger
+        trigger: on roll
+        procedure: take +1 forward to all
       - name: Eldritch Tones
         type: advanced
         text: Your arcane art is strong, allowing you to choose two effects instead of one.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take +[] to moveName = "arcane art"
       - name: Duelist’s Parry
         type: advanced
         text: When you hack and slash, you take +1 armor forward.
+        # TOOD inapplicable trigger
+        trigger: after Hack and Slash
+        procedure: take +1 forward to all
       - name: Bamboozle
         type: advanced
         text: When you parley with someone, on a 7+ you also take +1 forward with them.
+        trigger: instant
+        # TOOD inapplicable modifier
+        procedure: take +[] forward to moveName = Parley
+        # TODO multi-class move
       - name: Multiclass Dabbler
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
+        # TODO multi-class move
       - name: Multiclass Initiate
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
@@ -888,13 +1050,21 @@ playbooks:
         type: advanced
         replaces: Healing Song
         text: When you heal with arcane art, you heal +2d8 damage.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take +[] to moveName = "arcane art"
       - name: Vicious Blast
         type: advanced
         replaces: Vicious Cacophony
         text: When you grant bonus damage with arcane art, you grant an extra +2d4 damage.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take +[] to moveName = "arcane art"
       - name: Unforgettable Face
         type: advanced
         text: When you meet someone you’ve met before (your call) after some time apart you take +1 forward against them.
+        trigger: When you meet someone you’ve met before (your call) after some time apart
+        procedure: take +1 forward on against them
       - name: Reputation
         type: advanced
         replaces: Healing Song
@@ -902,24 +1072,49 @@ playbooks:
           When you first meet someone who’s heard songs about you, roll+Cha.
             * On a 10+, tell the GM two things they’ve heard about you.
             * On a 7-9, tell the GM one thing they’ve heard, and the GM tells you one thing.
+        trigger: When you first meet someone who’s heard songs about you
+        procedure:
+          roll roll+cha:
+            success: tell the GM two things they’ve heard about you.
+            partial success: tell the GM one thing they’ve heard, and the GM tells you one thing.
       - name: Eldritch Chord
         type: advanced
         replaces: Eldritch Tones
         text: When you use arcane art, you choose two effects. You also get to choose one of those effects to double.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take +[] to moveName = "arcane art"
       - name: An Ear For Magic
         type: advanced
         text: When you hear an enemy cast a spell the GM will tell you the name of the spell and its effects. Take +1 forward when acting on the answers.
+        trigger: When you hear an enemy cast a spell
+        procedure:
+          - the GM will tell you the name of the spell and its effects.
+          - take +1 forward on acting on the answers.
       - name: Devious
         type: advanced
         text: When you use charming and open you may also ask “How are you vulnerable to me?” Your subject may not ask this question of you.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take +[How are you vulnerable to me?] to moveName = "charming and open"
       - name: Duelist’s Block
         type: advanced
         replaces: Duelist’s Parry
         text: When you hack and slash, you take +2 armor forward.
+        # TOOD inapplicable trigger
+        trigger: after hack and slah
+        # TOOD inapplicable modifier
+        procedure: take +1 to armor forward on all
       - name: Con
         type: advanced
         replaces: Bamboozle
         text: When you parley with someone, on a 7+ you also take +1 forward with them and get to ask their player one question which they must answer truthfully.
+        trigger: instant
+        procedure:
+            # TOOD inapplicable modifier
+          - take +1
+          - ask their player one question which they must answer truthfully.
+        # TODO multi-class move
       - name: Multiclass Master
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
@@ -949,7 +1144,10 @@ playbooks:
       - name: dwarf
         move:
           text: You are one with stone. When you commune you are also granted a special version of Words of the Unspeaking as a rote which only works on stone.
+          # TODO inapplicable trigger
           trigger:  When you commune
+          # TODO inapplicable modifier
+          procedure: add +[] to spells
       - name: Human
         move:
           text: Your faith is diverse. Choose one wizard spell. You can cast and be granted that spell as if it was a cleric spell.
@@ -992,15 +1190,37 @@ playbooks:
             * Your religion is cultish and insular, add Petition: Gaining Secrets
             * Your religion has important sacrificial rites, add Petition: Offering
             * Your religion believes in trial by combat, add Petition: Personal Victory
+        trigger: instant
+        procedure:
+          # TODO add these to a field
+          - choose your deity’s domain:
+              - Healing and Restoration
+              - Bloody Conquest
+              - Civilization
+              - Knowledge and Hidden Things
+              - The Downtrodden and Forgotten
+              - What Lies Beneath
+          - choose on precept of your religion:
+              - "Your religion preaches the sanctity of suffering, add Petition: Suffering"
+              - "Your religion is cultish and insular, add Petition: Gaining Secrets"
+              - "Your religion has important sacrificial rites, add Petition: Offering"
+              - "Your religion believes in trial by combat, add Petition: Personal Victory"
       - name: Divine Guidance
         type: starting
         text: When you petition your deity according to the precept of your religion, you are granted some useful knowledge or boon related to your deity’s domain. The GM will tell you what.
+        trigger: When you petition your deity according to the precept of your religion
+        procedure: you are granted some useful knowledge or boon related to your deity’s domain. The GM will tell you what.
       - name: Turn Undead
         type: starting
         text: >
           When you hold your holy symbol aloft and call on your deity for protection, roll+Wis.
             On a 7+, so long as you continue to pray and brandish your holy symbol, no undead may come within reach of you.
             On a 10+, you also momentarily daze intelligent undead and cause mindless undead to flee. Aggression breaks the effects and they are able to act as normal. Intelligent undead may still find ways to harry you from afar. They’re clever like that.
+        trigger: When you hold your holy symbol aloft and call on your deity for protection
+        procedure:
+          roll roll+wis:
+            hit: so long as you continue to pray and brandish your holy symbol, no undead may come within reach of you.
+            success: you also momentarily daze intelligent undead and cause mindless undead to flee. Aggression breaks the effects and they are able to act as normal. Intelligent undead may still find ways to harry you from afar. They’re clever like that.
       - name: Commune
         type: starting
         text: >
@@ -1008,44 +1228,102 @@ playbooks:
             * Lose any spells already granted to you.
             * Are granted new spells of your choice whose total levels don’t exceed your own level+1, and none of which is a higher level than your own level.
             * Prepare all of your rotes, which never count against your limit.
+        trigger: When you spend uninterrupted time (an hour or so) in quiet communion with your deity
+        procedure:
+          - set spells to be []
+          # TODO create this procedure in "spells" mechanism
+          - gain spells
       - name: Cast a Spell
         type: starting
         text: >
-        When you unleash a spell granted to you by your deity, roll+Wis.
-          On a 10+, the spell is successfully cast and your deity does not revoke the spell, so you may cast it again.
-          On a 7–9, the spell is cast, but choose one:
-            * You draw unwelcome attention or put yourself in a spot. The GM will tell you how.
-            * Your casting distances you from your deity—take -1 ongoing to cast a spell until the next time you commune.
-            * After you cast it, the spell is revoked by your deity. You cannot cast the spell again until you commune and have it granted to you.
-        Note that maintaining spells with ongoing effects will sometimes cause a penalty to your roll to cast a spell.
+          When you unleash a spell granted to you by your deity, roll+Wis.
+            On a 10+, the spell is successfully cast and your deity does not revoke the spell, so you may cast it again.
+            On a 7–9, the spell is cast, but choose one:
+              * You draw unwelcome attention or put yourself in a spot. The GM will tell you how.
+              * Your casting distances you from your deity—take -1 ongoing to cast a spell until the next time you commune.
+              * After you cast it, the spell is revoked by your deity. You cannot cast the spell again until you commune and have it granted to you.
+          Note that maintaining spells with ongoing effects will sometimes cause a penalty to your roll to cast a spell.
+        trigger: When you unleash a spell granted to you by your deity
+        procedure:
+          roll roll+wis:
+            # TODO create this procedure in "spells" mechanism
+            success: cast spell
+            partial success:
+              - choose:
+                You draw unwelcome attention or put yourself in a spot. The GM will tell you how.: You draw unwelcome attention or put yourself in a spot. The GM will tell you how.
+                # TODO inapplicable modifier
+                Your casting distances you from your deity—take -1 ongoing to cast a spell until the next time you commune.: take -1 ongoing to moveName = Cast A Spell until commune
+                # TODO inapplicable modifier
+                After you cast it, the spell is revoked by your deity. You cannot cast the spell again until you commune and have it granted to you.: modify cast spell to remove
+              - cast spell
     moves 2-5:
       - name: Chosen One
         type: advanced
         text: Choose one spell. You are granted that spell as if it was one level lower.
+        trigger: instant
+        procedure: reduce 1 from (choice spell from cleric spells).level
       - name: Invigorate
         type: advanced
         text: When you heal someone they take +2 forward to their damage.
+        # TODO inapplicable trigger
+        trigger: When you heal someone
+        procedure: they take +2 forward to their damage.
       - name: The Scales of Life and Death
         type: advanced
         text: When someone takes their last breath in your presence, they take +1 to the roll.
+        trigger: When someone takes their last breath in your presence
+        procedure: they take +1 to the roll.
       - name: Serenity
         type: advanced
         text: When you cast a spell you ignore the first -1 penalty from ongoing spells.
+        trigger: instant
+        # TODO inapplicable modifier
+        procedure: take ignore[-1] from spells
       - name: First Aid
         type: advanced
         text: Cure Light Wounds is a rote for you, and therefore doesn’t count against your limit of granted spells.
+        trigger: instant
+        procedure: set (Cure Light Wounds).level = 0
       - name: Divine Intervention
         type: advanced
         text: When you commune you get 1 hold and lose any hold you already had. Spend that hold when you or an ally takes damage to call on your deity, they intervene with an appropriate manifestation (a sudden gust of wind, a lucky slip, a burst of light) and negate the damage.
+        trigger: When you commune
+        procedure:
+          hold 1:
+            # TODO inapplicable modifier
+            call on your deity, they intervene with an appropriate manifestation (a sudden gust of wind, a lucky slip, a burst of light) and negate a damage you or an ally is supposed to take.: take -damage to damage roll on choice
       - name: Penitent
         type: advanced
         text: When you take damage and embrace the pain, you may take +1d4 damage (ignoring armor). If you do, take +1 forward to cast a spell.
+        # TODO inapplicable trigger
+        trigger: When you take damage
+        procedure:
+          choose embrace the pain:
+            yes:
+              - take 1d4 damage that ignores armor
+              - take +1 forward to cast a spell
+            no: do nothing
       - name: Empower
         type: advanced
         text: >
           When you cast a spell, on a 10+ you have the option of choosing from the 7–9 list. If you do, you may choose one of these effects as well:
             * The spell’s effects are doubled
             * The spell’s targets are doubled
+        # TODO inapplicable trigger
+        trigger: on cast a spell >= 10
+        procedure:
+          choose do you want to take from the 7-9 list:
+            yes:
+              - choose:
+                  You draw unwelcome attention or put yourself in a spot. The GM will tell you how.: You draw unwelcome attention or put yourself in a spot. The GM will tell you how.
+                # TODO inapplicable modifier
+                Your casting distances you from your deity—take -1 ongoing to cast a spell until the next time you commune.: take -1 ongoing to moveName = Cast A Spell until commune
+                # TODO inapplicable modifier
+                After you cast it, the spell is revoked by your deity. You cannot cast the spell again until you commune and have it granted to you.: modify cast spell to remove
+              - choose:
+                  - The spell’s effects are doubled: The spell’s targets are doubled
+                  - The spell’s targets are doubled: The spell’s targets are doubled
+            no: do nothing
       - name: Orison for Guidance
         type: advanced
         text: When you sacrifice something of value to your deity and pray for guidance, your deity tells you what it would have you do. If you do it, mark experience.
@@ -2385,7 +2663,7 @@ special moves:
     procedure:
       - use gear rations
       - If you’re somewhere dangerous decide the watch order as well.
-      - is xp-level>=7:
+      - is level up allowed:
           yes: trigger Level up
           no: do nothing
       - choose Did you get at least a few uninterrupted hours of sleep?:
@@ -2451,7 +2729,7 @@ special moves:
                 - create bond
               Create a new bond: create bond
               Do not resolve a bond: do nothing
-        - choose Did I fulfill my alignemnt goal?:
+        - is alignment met:
             yes: change xp by 1
             no: do nothing
         - choose Did we learn something new and important about the world?:
