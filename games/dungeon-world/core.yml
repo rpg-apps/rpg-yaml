@@ -136,8 +136,8 @@ mechanisms: &mechanisms
       spend <name=hold>: remove (first hold in holds where hold.name = name) from holds
   damage: &damage
     playbook fields: &damage-playbook-fields
-      base damage: formula
-      max hp: formula
+      base damage: number
+      max hp: number
     character fields: &damage-character-fields
       damage: start as base damage formula
       hp: start as max hp
@@ -194,7 +194,7 @@ mechanisms: &mechanisms
       tags: large
       equipment: large
     playbook fields: &equipment-playbook-fields
-      load: formula
+      load: number
       starting gear options: equipment array array array # options for choices between arrays of equipment
     choices: &equipment-choices
       gear: from starting gear options
