@@ -1011,7 +1011,7 @@ playbooks:
         procedure:
           - choose a target
           - roll roll+con:
-              hit:deal 1d10
+              hit: deal 1d10
               success: the target is deafened for a few minutes
               partial success: "it’s out of control: the GM will choose an additional target nearby."
       - name: A Little Help From My Friends
