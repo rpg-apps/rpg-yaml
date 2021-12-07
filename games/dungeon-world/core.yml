@@ -124,7 +124,7 @@ mechanisms: &mechanisms
       "take <formula> ongoing to <string:filter>": modify <string:filter> <formula>
   holds: &holds
     types: &holds-types
-      hold: { name: text, options: procedure map }
+      hold: { name: text, options: procedure array }
     character fields: &holds-character-fields
       holds: start as []
     procedure: &holds-procedures
