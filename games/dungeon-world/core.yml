@@ -3098,7 +3098,14 @@ equipment:
     weight: 1
     description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
   - name: Healing Potion
-    tags: [1 uses, On use choose are you healing yourself: { yes: { choose are you removeing a debility or healing yourself: { removeing a debility: remove a debility, healing yourself: heal 10 } }, no: do nothing }]
+    tags:
+      - 1 uses
+      - On use choose are you healing yourself:
+          yes:
+            choose are you removeing a debility or healing yourself:
+              removeing a debility: remove a debility
+              healing yourself: heal 10
+          no: do nothing
     cost: 50
     weight: 0
     description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
