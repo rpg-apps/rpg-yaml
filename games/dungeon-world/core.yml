@@ -798,13 +798,13 @@ playbooks:
     mechanisms:
       description:
         playbook fields:
-          << *description-playbook-fields
+          <<: *description-playbook-fields
           title options: text array
         choices:
-          << *description-choices
+          <<: *description-choices
           title: text with recommendations from title options
         character fields:
-          << *description-character-fields
+          <<: *description-character-fields
           title: start as title choice
       moves:
         choices:
@@ -824,7 +824,7 @@ playbooks:
                 is weight<load&no_armor: modify armor +1 ongoing
       roll:
         global fields:
-          << *roll-global-fields
+          <<: *roll-global-fields
           appetite options: 
             - Pure destruction
             - Power over others
@@ -832,12 +832,12 @@ playbooks:
             - Conquest
             - Riches and property
             - Fame and glory
-        choices: << *roll-choices
+        choices: <<: *roll-choices
         character fields:
-          << *roll-character-fields
+          <<: *roll-character-fields
           appetites: start as []
         formulas:
-          << *roll-formulas
+          <<: *roll-formulas
           roll: "(input boolean are you pursuing an appetite?) ? d6+d8 : 2d6"
         procedures:
           roll <formula> {options}:
