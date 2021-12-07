@@ -78,14 +78,14 @@ mechanisms: &mechanisms
       confused: start as false
       scarred: start as false
     formulas: &roll-formulas
-      modifier for <number:stat> (number): 
+      "modifier for <number:stat> (number)": 
         switch stat:
           "0..8":  -1
           "9..12":  0
           "13..15": 1
           "16..17": 2
           "18..20": 3
-      <boolean:debility> modifier (number): "debility ? -1 : 0"
+      "<boolean:debility> modifier (number)": "debility ? -1 : 0"
       roll: 2d6
       str: (modifier for strength)     + (weak      modifier)
       dex: (modifier for dexterity)    + (shakey    modifier)
@@ -120,17 +120,17 @@ mechanisms: &mechanisms
           Stunned: set stunned = false
           Confused: set confused = false
           Scarred: set scarred = false
-      take <formula> forward to <string:filter>: modify 1 <string:filter> <formula>
-      take <formula> ongoing to <string:filter>: modify <string:filter> <formula>
+      "take <formula> forward to <string:filter>": modify 1 <string:filter> <formula>
+      "take <formula> ongoing to <string:filter>": modify <string:filter> <formula>
   holds: &holds
     types: &holds-types
       hold: { name: text, options: procedure map }
     character fields: &holds-character-fields
       holds: start as []
     procedure: &holds-procedures
-      hold <number:count=1> <string:name=hold> {options}:
+      "hold <number:count=1> <string:name=hold> {options}":
         repeat count times: add {name,options} to holds
-      spend a <string:name=hold> to {options}:
+      "spend a <string:name=hold> to {options}":
         for hold in holds where hold.name = name:
           set hold.options = options
       spend <name=hold>: remove (first hold in holds where hold.name = name) from holds
@@ -149,7 +149,7 @@ mechanisms: &mechanisms
         - is hp<0:
           yes: set hp = 0
           no: do nothing
-      take <number:damage> damage [that ignores armor]:
+      "take <number:damage> damage [that ignores armor]":
         is that ignore armor:
           yes: reduce hp by formula
           no: reduce hp by (formula - armor)
@@ -203,7 +203,7 @@ mechanisms: &mechanisms
       ignored tags: start as []
     formulas: &equipment-formulas
       weight (number): sum of equipment.weight for equipment in gear
-      regular <number=1> <text:name> (equipment array): array of number equipment where equipment.name = name
+      "regular <number=1> <text:name> (equipment array)": array of number equipment where equipment.name = name
     procedures: &equipment-procedures
       use <amount=1> tagged <tag>:
         for tag in (choice amount from (for equipment in gear where tag in equipment.tags)).tags:
@@ -541,9 +541,9 @@ playbooks:
             before: procedure
             after: procedure
         procedures:
-          apply <number:count=1> techniques to {procedure}:
+          "apply <number:count=1> techniques to {procedure}":
             - apply (choice count from technique from aquired techniques) to: execute procedure
-          apply <techniques array:techniques> to {procedure}:
+          "apply <techniques array:techniques> to {procedure}":
             - for technique in techniques:
                 execute technique.before
             - execute procedure
@@ -832,7 +832,8 @@ playbooks:
             - Conquest
             - Riches and property
             - Fame and glory
-        choices: <<: *roll-choices
+        choices:
+          <<: *roll-choices
         character fields:
           <<: *roll-character-fields
           appetites: start as []
