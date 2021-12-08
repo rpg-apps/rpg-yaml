@@ -536,8 +536,8 @@ playbooks:
       techniques:
         types:
           technique:
-            name: string
-            text: string
+            name: text
+            text: text
             before: procedure
             after: procedure
         procedures:
