@@ -1,4 +1,3 @@
-# TODO remove <formula> parameters and use actual types
 game: dungeon-world
 rulebook: core
 parser: 1.0
@@ -94,8 +93,8 @@ mechanisms: &mechanisms
       wis: (modifier for wisdom)       + (confused  modifier)
       cha: (modifier for charisma)     + (scarred   modifier)
     procedures: &roll-procedures
-      roll <formula> {options}:
-        switch formula:
+      roll <number> {options}:
+        switch number:
           "1..6": 
             - add 1 to xp
             - either:
@@ -120,8 +119,8 @@ mechanisms: &mechanisms
           Stunned: set stunned = false
           Confused: set confused = false
           Scarred: set scarred = false
-      "take <formula> forward to <string:filter>": modify 1 <string:filter> <formula>
-      "take <formula> ongoing to <string:filter>": modify <string:filter> <formula>
+      "take <number> forward to <string:filter>": modify 1 filter number
+      "take <number> ongoing to <string:filter>": modify filter number
   holds: &holds
     types: &holds-types
       hold: { name: text, options: procedure array }
@@ -139,21 +138,21 @@ mechanisms: &mechanisms
       base damage: number
       max hp: number
     character fields: &damage-character-fields
-      damage: start as base damage formula
+      damage: start as base damage
       hp: start as max hp
       armor: start as 0
     procedures: &damage-procedures
-      deal <formula>: show <formula>
+      deal <number>: show number
       take damage:
-        - "reduce hp by ((formula input damage) as number) - ((boolean input ignore armor?) ? 0 : max of 0 and (armor - number input piercing))"
+        - "reduce hp by ((number input damage) as number) - ((boolean input ignore armor?) ? 0 : max of 0 and (armor - number input piercing))"
         - is hp<0:
           yes: set hp = 0
           no: do nothing
       "take <number:damage> damage [that ignores armor]":
         is that ignore armor:
-          yes: reduce hp by formula
-          no: reduce hp by (formula - armor)
-      heal <formula>: add formula to hp
+          yes: reduce hp by number
+          no: reduce hp by (number - armor)
+      heal <number>: add number to hp
   race: &race
     types: &race-types
       race: { name: text, move: move }
@@ -798,13 +797,13 @@ playbooks:
     mechanisms:
       description:
         playbook fields:
-          <<: *description-playbook-fields
+          *description-playbook-fields
           title options: text array
         choices:
-          <<: *description-choices
+          *description-choices
           title: text with recommendations from title options
         character fields:
-          <<: *description-character-fields
+          *description-character-fields
           title: start as title choice
       moves:
         choices:
@@ -824,7 +823,7 @@ playbooks:
                 is weight<load&no_armor: modify armor +1 ongoing
       roll:
         global fields:
-          <<: *roll-global-fields
+          *roll-global-fields
           appetite options: 
             - Pure destruction
             - Power over others
@@ -833,17 +832,17 @@ playbooks:
             - Riches and property
             - Fame and glory
         choices:
-          <<: *roll-choices
+          *roll-choices
         character fields:
-          <<: *roll-character-fields
+          *roll-character-fields
           appetites: start as []
         formulas:
-          <<: *roll-formulas
+          *roll-formulas
           roll: "(input boolean are you pursuing an appetite?) ? d6+d8 : 2d6"
         procedures:
-          roll <formula> {options}:
-            - roll <formula> {options}:
-                roll formula:
+          roll <number> {options}:
+            - roll <number> {options}:
+                roll number:
                   "1..6": 
                     - add 1 to xp
                     - options.miss or options.failure or "Oh oh... The GM will tell you what just happened, but at least you got XP!"
@@ -1139,7 +1138,7 @@ playbooks:
       - [Tonsure, Strange Hair, Bald]
       - [Flowing Robes, Habit, Common Garb]
       - [Thin Body, Knobby Body, Flabby Body]
-    damage: d6
+    base damage: d6
     max hp: Constitution+8
     race options:
       - name: dwarf
@@ -2899,9 +2898,9 @@ tags:
     text: It takes two hands to use it effectively.
   - tag: Worn
     text: To use it, you have to be wearing it.
-  - tag: <formula> <trigger>
+  - tag: <number> <trigger>
     text: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
-    procedure: modify <trigger> <formula>
+    procedure: modify <trigger> number
   - tag: <number> uses
     text: It can only be used n times.
     procedure:
@@ -2921,9 +2920,9 @@ tags:
         yes: remove this from gear
   - tag: Forceful
     text: It can knock someone back a pace, maybe even off their feet.
-  - tag: <formula> damage
+  - tag: <number> damage
     text: It is particularly harmful to your enemies. When you deal damage, you add n to it.
-    procedure: modify once damage <formula>
+    procedure: modify once damage number
   - tag: Ignores Armor
     text: Don’t subtract armor from the damage taken.
     procedure: show "Ignores armor" with "deal damage"
@@ -2931,7 +2930,7 @@ tags:
     text: It does damage in a particularly destructive way, ripping people and things apart.
   - tag: <number> piercing
     text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: show <number> piercing with "deal damage"
+    procedure: show number piercing with "deal damage"
   - tag: Precise
     text: It rewards careful strikes. You use DEX to hack and slash with this weapon, not STR.
     procedure: modify Hack and Slash roll+Str = roll+Dex
