@@ -89,7 +89,7 @@ mechanisms: &mechanisms
           "13..15": 1
           "16..17": 2
           "18..20": 3
-      "<boolean:debility> modifier (number)": "debility ? -1 : 0"
+      "<boolean:debility> modifier (number)": "debility ? (-1) : 0"
       roll: 2d6
     procedures: &roll-procedures
       roll <number> {options}:
