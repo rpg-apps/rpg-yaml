@@ -17,7 +17,6 @@ mechanisms: &mechanisms
       moves 6-10: move array
     character fields: &moves-character-fields
       moves: start as basic moves and special moves
-    formulas: &moves-formulas
       moves 2-10: moves 2-5 and moves 6-10
     procedures: &moves-procedures
       trigger <move>:
@@ -76,6 +75,12 @@ mechanisms: &mechanisms
       stunned: start as false
       confused: start as false
       scarred: start as false
+      str: (modifier for strength) + (weak modifier)
+      dex: (modifier for dexterity) + (shakey modifier)
+      con: (modifier for constitution) + (sick modifier)
+      int: (modifier for intelligence) + (stunned modifier)
+      wis: (modifier for wisdom) + (confused modifier)
+      cha: (modifier for charisma) + (scarred modifier)
     formulas: &roll-formulas
       "modifier for <number:stat> (number)": 
         switch stat:
@@ -86,12 +91,6 @@ mechanisms: &mechanisms
           "18..20": 3
       "<boolean:debility> modifier (number)": "debility ? -1 : 0"
       roll: 2d6
-      str: (modifier for strength)     + (weak      modifier)
-      dex: (modifier for dexterity)    + (shakey    modifier)
-      con: (modifier for constitution) + (sick      modifier)
-      int: (modifier for intelligence) + (stunned   modifier)
-      wis: (modifier for wisdom)       + (confused  modifier)
-      cha: (modifier for charisma)     + (scarred   modifier)
     procedures: &roll-procedures
       roll <number> {options}:
         switch number:
@@ -200,8 +199,8 @@ mechanisms: &mechanisms
     character fields: &equipment-character-fields
       gear: start as gear choice
       ignored tags: start as []
-    formulas: &equipment-formulas
       weight (number): sum of equipment.weight for equipment in gear
+    formulas: &equipment-formulas
       "regular <number=1> <text:name> (equipment array)": array of number equipment where equipment.name = name
     procedures: &equipment-procedures
       use <amount=1> tagged <tag>:
