@@ -55,7 +55,6 @@ mechanisms: &mechanisms
     character fields: &expirience-character-fields
       level: start as 1
       xp: start as 0
-    formulas:
       level up allowed: level + 7 <= xp
   roll: &roll
     global fields: &roll-global-fields
