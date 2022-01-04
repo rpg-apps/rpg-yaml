@@ -198,7 +198,7 @@ mechanisms: &mechanisms
     character fields: &equipment-character-fields
       gear: start as gear choice
       ignored tags: start as []
-      weight: sum of equipment.weight for equipment in gear
+      weight: sum of (equipment.weight for equipment in gear)
     formulas: &equipment-formulas
       "regular <number=1> <text:name> (equipment array)": array of number equipment where equipment.name = name
     procedures: &equipment-procedures
