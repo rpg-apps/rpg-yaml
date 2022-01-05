@@ -17,6 +17,7 @@ mechanisms: &mechanisms
       moves 6-10: move array
     character fields: &moves-character-fields
       moves: start as basic moves and special moves
+    formulas:
       moves 2-10: moves 2-5 and moves 6-10
     procedures: &moves-procedures
       trigger <move>:
@@ -55,7 +56,7 @@ mechanisms: &mechanisms
     character fields: &expirience-character-fields
       level: start as 1
       xp: start as 0
-      level up allowed: level + 7 <= xp
+      level up allowed: (level + 7) <= xp
   roll: &roll
     global fields: &roll-global-fields
       initial stats: [8, 9, 12, 13, 15 ,16]
