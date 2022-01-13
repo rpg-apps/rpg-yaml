@@ -47,7 +47,7 @@ mechanisms: &mechanisms
     choices: &description-choices
       name: text with recommendations from name options
       description: long text
-      look: free text with recommendations from look options
+      look: text with recommendations from look options
     character fields: &description-character-fields
       name: start as name choice
       description: start as description choice
