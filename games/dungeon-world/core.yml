@@ -704,142 +704,176 @@ tags:
   - tag: On use <procedure>
     procedure: <procedure>
 equipment:
-  - &coin name: coin
+  - &coin
+    name: coin
     tags: []
     cost: 1
     weight: 0
-  - &Ragged_Bow name: Ragged Bow
+  - &Ragged_Bow
+    name: Ragged Bow
     tags: [Near]
     cost: 15
     weight: 2
-  - &Fine_Bow name: Fine Bow
+  - &Fine_Bow
+    name: Fine Bow
     tags: [Near, Far]
     cost: 60
     weight: 2
-  - &Hunters_Bow name: Hunter's Bow
+  - &Hunters_Bow
+    name: Hunter's Bow
     tags: [Near, Far]
     cost: 100
     weight: 1
-  - &Crossbow name: Crossbow
+  - &Crossbow
+    name: Crossbow
     tags: [Near, +1 damage, reload]
     cost: 35
     weight: 3
-  - &Bundle_of_Arrows name: Bundle of Arrows
+  - &Bundle_of_Arrows
+    name: Bundle of Arrows
     tags: [3 ammo]
     cost: 1
     weight: 1
-  - &Elven_Arrows name: Elven Arrows
+  - &Elven_Arrows
+    name: Elven Arrows
     tags: [4 ammo]
     cost: 1
     weight: 1
-  - &Club name: Club
+  - &Club
+    name: Club
     tags: [Close]
     cost: 1
     weight: 2
-  - &Shillelagh name: Shillelagh
+  - &Shillelagh
+    name: Shillelagh
     tags: [Close]
     cost: 1
     weight: 2
-  - &Staff name: Staff
+  - &Staff
+    name: Staff
     tags: [Close, Two-handed]
     cost: 1
     weight: 1
-  - &Dagger name: Dagger
+  - &Dagger
+    name: Dagger
     tags: [Hand]
     cost: 2
     weight: 1
-  - &Shiv name: Shiv
+  - &Shiv
+    name: Shiv
     tags: [Hand]
     cost: 2
     weight: 1
-  - &Knife name: Knife
+  - &Knife
+    name: Knife
     tags: [Hand]
     cost: 2
     weight: 1
-  - &Throwing_Dagger name: Throwing Dagger
+  - &Throwing_Dagger
+    name: Throwing Dagger
     tags: [Thrown, Near]
     cost: 1
     weight: 1
-  - &Short_Sword name: Short Sword
+  - &Short_Sword
+    name: Short Sword
     tags: [Close]
     cost: 8
     weight: 1
-  - &Axe name: Axe
+  - &Axe
+    name: Axe
     tags: [Close]
     cost: 8
     weight: 1
-  - &Warhammer name: Warhammer
+  - &Warhammer
+    name: Warhammer
     tags: [Close]
     cost: 8
     weight: 1
-  - &Mace name: Mace
+  - &Mace
+    name: Mace
     tags: [Close]
     cost: 8
     weight: 1
-  - &Spear name: Spear
+  - &Spear
+    name: Spear
     tags: [Reach, Thrown, Near]
     cost: 5
     weight: 1
-  - &Long_Sword name: Long Sword
+  - &Long_Sword
+    name: Long Sword
     tags: [Close, +1 damage]
     cost: 15
     weight: 2
-  - &Battle_Axe name: Battle Axe
+  - &Battle_Axe
+    name: Battle Axe
     tags: [Close, +1 damage]
     cost: 15
     weight: 2
-  - &Flail name: Flail
+  - &Flail
+    name: Flail
     tags: [Close, +1 damage]
     cost: 15
     weight: 2
-  - &Halberd name: Halberd
+  - &Halberd
+    name: Halberd
     tags: [Reach, +1 damage, Two-handed]
     cost: 9
     weight: 2
-  - &Rapier name: Rapier
+  - &Rapier
+    name: Rapier
     tags: [Close, Percise]
     cost: 25
     weight: 1
-  - &Dueling_Rapier name: Dueling Rapier
+  - &Dueling_Rapier
+    name: Dueling Rapier
     tags: [Close, 1 piercing, Percise]
     cost: 50
     weight: 2
-  - &Leather_Armor name: Leather Armor
+  - &Leather_Armor
+    name: Leather Armor
     tags: [1 armor, worn]
     cost: 10
     weight: 1
-  - &Chainmail name: Chainmail
+  - &Chainmail
+    name: Chainmail
     tags: [1 armor, worn]
     cost: 10
     weight: 1
-  - &Scale_Mail name: Scale Mail
+  - &Scale_Mail
+    name: Scale Mail
     tags: [2 armor, worn, clumsy]
     cost: 50
     weight: 3
-  - &Plate_armor name: Plate armor
+  - &Plate_armor
+    name: Plate armor
     tags: [3 armor, worn, clumsy]
     cost: 350
     weight: 4
-  - &Shield name: Shield
+  - &Shield
+    name: Shield
     tags: [+1 armor]
     cost: 15
     weight: 2
-  - &Adventuring_Gear name: Adventuring Gear
+  - &Adventuring_Gear
+    name: Adventuring Gear
     tags: [5 uses]
     cost: 20
     weight: 1
     description: Adventuring gear is a collection of useful mundane items such as chalk, poles, spikes, ropes, etc. When you rummage through your adventuring gear for some useful mundane item, you find what you need and mark off a use.
-  - &Bandages name: Bandages
+  - &Bandages
+    name: Bandages
     tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: do nothing }]
     cost: 5
     weight: 0
     description: When you have a few minutes to bandage someone else’s wounds, heal them of 4 damage and expend a use.
-  - &Poultices_and_Herbs name: Poultices and Herbs
+  - &Poultices_and_Herbs
+    name: Poultices and Herbs
     tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: do nothing }]
     cost: 10
     weight: 1
     description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
-  - &Healing_Potion name: Healing Potion
+  - &Healing_Potion
+    name: Healing Potion
     tags:
       - 1 uses
       - On use choose are you healing yourself:
@@ -851,62 +885,74 @@ equipment:
     cost: 50
     weight: 0
     description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
-  - &Keg_of_Dwarven_Stout name: Keg of Dwarven Stout
+  - &Keg_of_Dwarven_Stout
+    name: Keg of Dwarven Stout
     tags: [1 uses, On use take +1 forward on Carouse]
     cost: 10
     weight: 4
     description: When you open a keg of dwarven stout and let everyone drink freely, take +1 to your Carouse roll. If you drink a whole keg yourself, you are very, very drunk.
-  - &Bag_of_Books name: Bag of Books
+  - &Bag_of_Books
+    name: Bag of Books
     tags: [5 uses, On use take +1 forward on Spout Lore]
     cost: 10
     weight: 2
     description: When your bag of books contains just the right book for the subject you’re spouting lore on, consult the book, mark off a use, and take +1 to your roll.
-  - &Antitoxin name: Antitoxin
+  - &Antitoxin
+    name: Antitoxin
     tags: [1 uses]
     cost: 10
     weight: 0
     description: When you drink antitoxin, you’re cured of one poison affecting you.
-  - &Dungeon_Rations name: Dungeon Rations
+  - &Dungeon_Rations
+    name: Dungeon Rations
     tags: [Ration, 5 use]
     cost: 3
     weight: 1
     description: Not tasty, but not bad either.
-  - &Personal_Feast name: Personal Feast
+  - &Personal_Feast
+    name: Personal Feast
     tags: [Ration, 1 use]
     cost: 10
     weight: 1
     description: Ostentatious to say the least.
-  - &Dwarven_Hardtack name: Dwarven Hardtack
+  - &Dwarven_Hardtack
+    name: Dwarven Hardtack
     tags: [Requires Dwarf, Ration, 7 uses]
     cost: 3
     weight: 1
     description: Dwarves say it tastes like home. Everyone else says it tastes like home, if home is a hog farm, and on fire.
-  - &Elven_Bread name: Elven Bread
+  - &Elven_Bread
+    name: Elven Bread
     tags: [Ration, 7 uses]
     cost: 10
     weight: 1
     description: Only the greatest of elf-friends are treated to this rare delicacy.
-  - &Halfling_Pipeleaf name: Halfling Pipeleaf
+  - &Halfling_Pipeleaf
+    name: Halfling Pipeleaf
     tags: [6 uses, use twice, On use take +1 forward to Parley]
     cost: 5
     weight: 0
     description: When you share halfling pipeleaf with someone, expend two uses and take +1 forward to parley with them.
-  - &Oil_of_Tagit name: Oil of Tagit
+  - &Oil_of_Tagit
+    name: Oil of Tagit
     tags: [Dangerous, Applied, 3 uses]
     cost: 15
     weight: 0
     description: The target falls into a light sleep.
-  - &Bloodweed name: Bloodweed
+  - &Bloodweed
+    name: Bloodweed
     tags: [Dangerous, Touch, 3 uses]
     cost: 12
     weight: 0
     description: Until cured, whenever the afflicted rolls damage, they roll an additional d4 and subtract that result from their normal damage.
-  - &Goldenroot name: Goldenroot
+  - &Goldenroot
+    name: Goldenroot
     tags: [Dangerous, Applied, 3 uses]
     cost: 20
     weight: 0
     description: The target treats the next creature they see as a trusted ally, until proved otherwise.
-  - &Serpents_Tears name: Serpent’s Tears
+  - &Serpents_Tears
+    name: Serpent’s Tears
     tags: [Dangerous, Applied, 3 uses]
     cost: 10
     weight: 0
@@ -1353,7 +1399,7 @@ playbooks:
       - <char> seems like they would fold at the first sign of trouble. I don’t trust them.
     load: str+8
     starting gear options:
-      - - [{ name: Noble’s silks, weight: 0, cost: 0, tags: [] }, 10 coin]
+      - - [{ name: Noble’s silks, weight: 0, cost: 0, tags: [] }, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin]
         - [{ name: Duelist’s leathers, weight: 1, cost: 0, tags: [1 armor, worn] }]
       - - [{ name: Bastard Sword, weight: 2, cost: 0, tags: [+1 damage, two-handed, close] }]
         - [*Rapier]
