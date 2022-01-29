@@ -1734,7 +1734,6 @@ playbooks:
     load: str+8
     starting gear options:
       - - [*Axe]
-          /TODO
         - [{ name: Two Handed Sword, weight: 2, cost: 0, tags: [close, +1 damage] }]
       - - [*Adventuring_Gear, *Dungeon_Rations]
         - [*Chainmail]
