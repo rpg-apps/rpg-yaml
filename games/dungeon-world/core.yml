@@ -213,6 +213,1103 @@ mechanisms: &mechanisms
             no: execute tag.procedure
       ignore tag <tag>: add tag.name to ignored tags
       aknoledge tag <tag>: remove tag.name to ignored tags
+basic moves: 
+  - name: Hack and Slash
+    type: basic
+    text: >
+      When you attack an enemy in melee, roll+Str.
+      * On a 10+, you deal your damage to the enemy and avoid their attack. At your option, you may choose to do +1d6 damage but expose yourself to the enemy’s attack.
+      * On a 7–9, you deal your damage to the enemy and the enemy makes an attack against you.
+    trigger: When you attack an enemy in melee
+    procedure:
+      roll roll+Str:
+        success:
+          choose do +1d6 damage but expose yourself to the enemy’s attack?:
+            yes: [deal damage+1d6, take damage]
+            no: deal damage
+        partial success: [deal damage, take damage]
+  - name: Volley
+    type: basic
+    text: >
+      When you take aim and shoot at an enemy at range, roll+Dex.
+      * On a 10+, you have a clear shot — deal your damage.
+      * On a 7–9, choose one (whichever you choose you deal your damage):
+        * You have to move to get the shot placing you in danger as described by the GM.
+        * You have to take what you can get: -1d6 damage.
+        * You have to take several shots, reducing your ammo by one.
+    trigger: When you take aim and shoot at an enemy at range
+    procedure:
+      roll roll+Dex:
+        hit: deal damage
+        partial success:
+          choose:
+            You have to move to get the shot placing you in danger as described by the GM.: You have to move to get the shot placing you in danger as described by the GM.
+            You have to take what you can get, -1d6 damage.: take -1d6 forward to damage
+            You have to take several shots, reducing your ammo by one.: use gear with tag ammo
+  - name: Defy Danger
+    type: basic
+    text: >
+      When you act despite an imminent threat or suffer a calamity, say how you deal with it and roll. If you do it
+      * by powering through, +Str
+      * by getting out of the way or acting fast, +Dex
+      * by enduring, +Con
+      * with quick thinking, +Int
+      * through mental fortitude, +Wis
+      * using charm and social grace, +Cha
+
+      * On a 10+, you do what you set out to, the threat doesn’t come to bear.
+      * On a 7–9, you stumble, hesitate, or flinch: the GM will offer you a worse outcome, hard bargain, or ugly choice.
+    trigger: When you act despite an imminent threat or suffer a calamity
+    procedure:
+      - choose How do you deal with it?:
+          By powering through (Str): modify once roll +Str
+          By getting out of the way or acting fast (Dex): modify once roll +Dex
+          By enduring (Con): modify once roll +Con
+          With quick thinking (Str): modify once roll +Int
+          Through mental fortitude (Wis): modify once roll +Wis
+          Using charm and social grace (Cha): modify once roll +Cha
+      - roll roll:
+          success: You do what you set out to, the threat doesn’t come to bear.
+          partial success: "You stumble, hesitate, or flinch: the GM will offer you a worse outcome, hard bargain, or ugly choice."
+  - name: Defend
+    type: basic
+    text: >
+      When you stand in defense of a person, item, or location under attack, roll+Con.
+      * On a 10+, hold 3.
+      * On a 7–9, hold 1.
+      As long as you stand in defense, when you or the thing you defend is attacked you may spend hold, 1 for 1, to choose an option:
+      * Redirect an attack from the thing you defend to yourself.
+      * Halve the attack’s effect or damage.
+      * Open up the attacker to an ally giving that ally +1 forward against the attacker.
+      * Deal damage to the attacker equal to your level.
+    trigger: When you stand in defense of a person, item, or location under attack
+    procedure:
+      - roll roll+Con:
+          success: hold 3
+          partial success: hold 1
+      - use:
+          Redirect an attack from the thing you defend to yourself.: Redirect an attack from the thing you defend to yourself.
+          Halve the attack’s effect or damage.: Halve the attack’s effect or damage.
+          Open up the attacker to an ally giving that ally +1 forward against the attacker.:
+            choose Is the ally you?:
+              yes: modify against the enemy +1 forward
+              no: do nothing
+          Deal damage to the attacker equal to your level.: deal level/2
+  - name: Spout Lore
+    type: basic
+    text: >
+      When you consult your accumulated knowledge about something, roll+Int.
+      * On a 10+, the GM will tell you something interesting and useful about the subject relevant to your situation.
+      * On a 7–9, the GM will only tell you something interesting—it’s on you to make it useful.
+      The GM might ask you “How do you know this?” Tell them the truth, now.
+    trigger: When you consult your accumulated knowledge about something
+    procedure:
+      roll roll+Int:
+        success: The GM will tell you something interesting and useful about the subject relevant to your situation, and might ask you “How do you know this?” Tell them the truth, now.
+        patrial success: The GM will only tell you something interesting — it’s on you to make it useful, and might ask you “How do you know this?” Tell them the truth, now.
+  - name: Discern Realities
+    type: basic
+    text: >
+      When you closely study a situation or person, roll+Wis.
+      * On a 10+, ask the GM 3 questions from the list below.
+      * On a 7–9, ask 1.
+
+      Either way, take +1 forward when acting on the answers.
+      * What happened here recently?
+      * What is about to happen?
+      * What should I be on the lookout for?
+      * What here is useful or valuable to me?
+      * Who’s really in control here?
+      * What here is not what it appears to be?
+    trigger: When you closely study a situation or person
+    procedure:
+      - roll roll+Wis:
+          success: choose 3
+          partial succes: choose 1
+      - options: 
+          - What happened here recently?
+          - What is about to happen?
+          - What should I be on the lookout for?
+          - What here is useful or valuable to me?
+          - Who’s really in control here?
+          - What here is not what it appears to be?
+      - take +1 forward when acting on the answers
+  - name: Parley
+    type: basic
+    text: >
+      When you have leverage on a GM Character and manipulate them, roll+Cha.
+      Leverage is something they need or want.
+      * On a 10+, they do what you ask if you first promise what they ask of you.
+      * On a 7–9, they will do what you ask, but need some concrete assurance of your promise, right now.
+    trigger: When you have leverage on a GM Character and manipulate them
+    procedure:
+      roll roll+Cha:
+        success: They do what you ask if you first promise what they ask of you.
+        patrial success: They will do what you ask, but need some concrete assurance of your promise, right now.
+  - name: Aid or Interfere
+    type: basic
+    text: >
+      When you help or hinder someone you have a bond with, roll+Bond with them.
+      * On a 10+ they take +1 or -2, your choice. 
+      * On a 7–9 you also expose yourself to danger, retribution, or cost.
+    trigger: When you help or hinder someone you have a bond with
+    procedure:
+      roll roll+bond:
+        success:
+          choose wether they take +1 or -2:
+            They take +1: They take +1
+            They take -2: They take -2
+        partial success also: You expose yourself to danger, retribution, or cost.
+special moves:
+  - name: Last Breath
+    type: special
+    text: >
+      When you’re dying you catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
+      Then roll (just roll, +nothing — yeah, Death doesn’t care how tough or cool you are).
+      * On a 10+, you’ve cheated Death — you’re in a bad spot but you’re still alive.
+      * On a 7–9, Death himself will offer you a bargain. Take it and stabilize or refuse and pass beyond the Black Gates into whatever fate awaits you.
+      * On 6-, your fate is sealed. You’re marked as Death’s own and you’ll cross the threshold soon. The GM will tell you when.
+    trigger: on hp=0
+    procedure:
+      - You catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
+      - roll roll:
+          success:
+            - set hp=1
+            - You’ve cheated Death — you’re in a bad spot but you’re still alive.
+          partial success:
+            choose death himself offers you a bargain:
+              Take Death’s bargain and stabilize: set hp=1
+              Don’t take Death’s bargain and pass beyond the Black Gates into whatever fate awaits you: die
+          miss: die
+  - name: Encumrance
+    type: special
+    text: >
+      When you make a move while carrying weight you may be encumbered. If your weight carried is:
+
+      * Equal to or less than your load, you suffer no penalty
+      * Less than or equal to your load+2, you take -1 ongoing until you lighten your burden
+      * Greater than your load+2, you have a choice: drop at least 1 weight and roll at -1, or automatically fail
+    trigger: on wieght>load
+    procedure:
+      is weight>load+2:
+        yes: modify all autofail forced ongoing until weight<=load+2
+        no: modify all -1 forced ongoing until weight>load+2||wright<=load
+  - name: Make Camp
+    type: special
+    text: >
+      When you settle in to rest consume a ration.
+      If you’re somewhere dangerous decide the watch order as well.
+      If you have enough XP you may level up.
+      When you wake from at least a few uninterrupted hours of sleep heal damage equal to half your max HP.
+    trigger: When you settle in to rest
+    procedure:
+      - use gear rations
+      - If you’re somewhere dangerous decide the watch order as well.
+      - is level up allowed:
+          yes: trigger Level up
+          no: do nothing
+      - choose Did you get at least a few uninterrupted hours of sleep?:
+          yes: change hp +maxHP/2
+          no: do nothing
+  - name: Take Watch
+    type: special
+    text: >
+      When you’re on watch and something approaches the camp roll+Wis.
+      * On a 10+, you’re able to wake the camp and prepare a response, everyone in the camp takes +1 forward.
+      * On a 7–9, you react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
+      * On a miss, whatever lurks outside the campfire’s light has the drop on you.
+    trigger: When you’re on watch and something approaches the camp
+    procedure:
+        roll roll+Wis:
+          success:
+            - You’re able to wake the camp and prepare a response
+            - modify all +1 forward
+          partial success: You react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
+          miss: Whatever lurks outside the campfire’s light has the drop on you.
+  - name: Undertake a Perilous Journey
+    type: special
+    text: >
+      When you travel through hostile territory, choose one member of the party to act as trailblazer, one to scout ahead, and one to be quartermaster. Each character with a job to do rolls+Wis.
+      * On a 10+:
+        * the quartermaster reduces the number of rations required by one
+        * the trailblazer reduces the amount of time it takes to reach your destination (the GM will say by how much)
+        * the scout will spot any trouble quick enough to let you get the drop on it
+      * On a 7–9, each role performs their job as expected: the normal number of rations are consumed, the journey takes about as long as expected, no one gets the drop on you but you don’t get the drop on them either.
+
+      You can’t assign more than one job to a character. If you don’t have enough party members, or choose not to assign a job, treat that job as if it had been assigned and the responsible player had rolled a 6.
+    trigger: When you travel through hostile territory
+    procedure:
+        choose What is your role in this journey?:
+          Quartermaster:
+            roll roll+Wis:
+              success: You reduce the number of rations required by one.
+              partial success: The normal number of rations are consumed.
+          Trailblazer:
+            roll roll+Wis:
+              success: You reduce the amount of time it takes to reach your destination (the GM will say by how much).
+              partial success: The journey takes about as long as expected.
+          Scout:
+            roll roll+Wis:
+              success: You will spot any trouble quick enough to let you get the drop on it.
+              partial success: No one gets the drop on you but you don’t get the drop on them either.
+  - name: End Of Session
+    type: special
+    text: >
+      When you reach the end of a session, choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.
+
+      Once bonds have been updated look at your alignment. If you fulfilled that alignment at least once this session, mark XP. Then answer these three questions as a group:
+      * Did we learn something new and important about the world?
+      * Did we overcome a notable monster or enemy?
+      * Did we loot a memorable treasure?
+      For each “yes” answer everyone marks XP.
+    trigger: When you reach the end of a session
+    procedure:
+        - choose Choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.:
+              Resolve a bond:
+                - resolve bond
+                - change xp by 1
+                - create bond
+              Create a new bond: create bond
+              Do not resolve a bond: do nothing
+        - is alignment met:
+            yes: change xp by 1
+            no: do nothing
+        - choose Did we learn something new and important about the world?:
+            yes: change xp by 1
+            no: do nothing
+        - choose Did we overcome a notable monster or enemy?:
+            yes: change xp by 1
+            no: do nothing
+        - choose Did we loot a memorable treasure?:
+            yes: change xp by 1
+            no: do nothing
+  - name: Level Up
+    type: special
+    text: >
+      When you have downtime (hours or days) and XP equal to (or greater than) your current level+7, you can reflect on your experiences and hone your skills.
+      * Subtract your current level+7 from your XP.
+      * Increase your level by 1.
+      * Choose a new advanced move from your class.
+      * If you are the wizard, you also get to add a new spell to your spellbook.
+      * Choose one of your stats and increase it by 1 (this may change your modifier). Changing your Constitution increases your maximum and current HP. Ability scores can’t go higher than 18.
+    trigger: When you have downtime (hours or days) and XP equal to (or greater than) your current level+7
+    procedure:
+      - change xp by (-1*level)-7
+      - change level by 1
+      - add advanced move
+      - choose Choose one of your stats to increase:
+          Strength: change Strength by 1
+          Dexterity: change Dexterity by 1
+          Constitution: change Constitution by 1
+          Intelligence: change Intelligence by 1
+          Wisdom: change Wisdom by 1
+          Charisma: change Charisma by 1
+  - name: Carouse
+    type: special
+    text: >
+      When you return triumphant and throw a big party, spend 100 coins and roll +1 for every extra 100 coins spent.
+      * On a 10+, choose 3.
+      * On a 7–9, choose 1.
+      * On a miss, you still choose one, but things get really out of hand (the GM will say how).
+
+      * You befriend a useful NPC.
+      * You hear rumors of an opportunity.
+      * You gain useful information.
+      * You are not entangled, ensorcelled, or tricked.
+    trigger: When you return triumphant and throw a big party
+    procedure:
+    - choose How much do you spend?:
+        100 coins (roll+0): use gear 100 coin
+        200 coins (roll+1): [use gear 200 coin, modify all +1 forced forward]
+        300 coins (roll+2): [use gear 300 coin, modify all +2 forced forward]
+        400 coins (roll+3): [use gear 400 coin, modify all +3 forced forward]
+    - roll roll:
+        success: choose 3
+        partial success: choose 1
+        miss: [choose 1, Things get really out of hand (the GM will say how).]
+        use:
+          - You befriend a useful NPC.
+          - You hear rumors of an opportunity.
+          - You gain useful information.
+          - You are not entangled, ensorcelled, or tricked.
+  - name: Supply
+    type: special
+    text: >
+      When you go to buy something with gold on hand, if it’s something readily available in the settlement you’re in, you can buy it at market price.
+      If it’s something special, beyond what’s usually available here, or non-mundane, roll+Cha.
+      * On a 10+, you find what you’re looking for at a fair price.
+      * On a 7–9, you’ll have to pay more or settle for something that’s not exactly what you wanted, but close. The GM will tell you what your options are.
+    trigger: When you go to buy something with gold on hand
+    procedure:
+      choose Is it something readily available in the settlement you’re in?:
+        yes: You can buy it in market price
+        no:
+          roll roll+Cha:
+            success: You find what you’re looking for at a fair price.
+            partial success: You’ll have to pay more or settle for something that’s not exactly what you wanted, but close. The GM will tell you what your options are.
+  - name: Recover
+    type: special
+    text: >
+      When you do nothing but rest in comfort and safety after a day of rest you recover all your HP.
+      After three days of rest you remove one debility of your choice.
+      If you’re under the care of a healer (magical or otherwise) you heal a debility for every two days of rest instead.
+    trigger: When you do nothing but rest in comfort and safety
+    procedure:
+      choose How long do you rest?:
+        One day - recover all your HP: change hp by maxHP
+        Three days, or two days with a healer - also remove a debility:
+          - change hp by maxHP
+          - choose Choose a debility to remove:
+              Weak: set Weak false
+              Shakey: set Shakey false
+              Sick: set Sick false
+              Stunned: set Stunned false
+              Confused: set Confused false
+              Scarred: set Scarred false
+  - name: Recruit
+    type: special
+    text: >
+      When you put out word that you’re looking to hire help, roll:
+      * +1 if you make it known that your pay is generous
+      * +1 if you make it known what you’re setting out to do
+      * +1 if you make it known that they’ll get a share of whatever you find
+      * +1 if you have a useful reputation around these parts
+
+      * On a 10+, you’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
+      * On a 7–9, you’ll have to settle for someone close to what you want or turn them away.
+      * On a miss someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
+    trigger: When you put out word that you’re looking to hire help
+    procedure:
+      - choose Do you make it known that your pay is generous?: { yes: modify all +1 forced forward, no: do nothing }
+      - choose Do you make it known what you’re setting out to do?: { yes: modify all +1 forced forward, no: do nothing }
+      - choose Do you make it known that they’ll get a share of whatever you find?: { yes: modify all +1 forced forward, no: do nothing }
+      - choose Do you have a useful reputation around these parts?: { yes: modify all +1 forced forward, no: do nothing }
+      - roll roll:
+          success: You’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
+          partial success: You’ll have to settle for someone close to what you want or turn them away.
+          miss:
+            - Someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
+            - choose Bring them along or turn them away?:
+                Bring them along: Bring them along
+                Turn them away: modify recruit -1 forced forward
+  - name: Outstanding Warrants
+    type: special
+    text: >
+      When you return to a civilized place in which you’ve caused trouble before, roll+Cha.
+      * On a 10+, word has spread of your deeds and everyone recognizes you.
+      * On a 7–9, as above, and the GM chooses a complication:
+        * The local constabulary has a warrant out for your arrest.
+        * Someone has put a price on your head.
+        * Someone important to you has been put in a bad spot as a result of your actions.
+    trigger: When you return to a civilized place in which you’ve caused trouble before
+    procedure:
+      roll roll+Cha:
+        success: Word has spread of your deeds and everyone recognizes you.
+        partial success:
+          - Word has spread of your deeds and everyone recognizes you.
+          - "The GM chooses a complication: the local constabulary has a warrant out for your arrest, someone has put a price on your head or someone important to you has been put in a bad spot as a result of your actions."
+  - name: Bolster
+    type: special
+    text: >
+      When you spend your leisure time in study, meditation, or hard practice, you gain preparation.
+      * If you prepare for a week or more, take 1 preparation.
+      * If you prepare for a month or longer, take 3 instead.
+      When your preparation pays off spend 1 preparation for +1 to any roll. You can only spend one preparation per roll.
+    trigger: When you spend your leisure time in study, meditation, or hard practice
+    procedure:
+      choose If you prepare for:
+        Between a week and a month: hold 3
+        More then a month: hold 1
+      use: modify all +1 forward
+tags:
+  - tag: Applied
+    text: It’s only useful when carefully applied to a person or to something they eat or drink.
+  - tag: Touch
+    text: It’s used by touching it to the target’s skin.
+  - tag: Awkward
+    text: It’s unwieldy and tough to use.
+  - tag: Dangerous
+    text: It’s easy to get in trouble with it. If you interact with it without proper precautions the GM may freely invoke the consequences of your foolish actions.
+  - tag: Ration
+    text: It’s edible, more or less.
+  - tag: Requires <something>
+    text: It’s only useful to certain people. If you don’t meet the requirements it works poorly, if at all.
+  - tag: Slow
+    text: It takes minutes or more to use.
+  - tag: Two-handed
+    text: It takes two hands to use it effectively.
+  - tag: Worn
+    text: To use it, you have to be wearing it.
+  - tag: <number> <trigger>
+    text: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
+    procedure: modify <trigger> number
+  - tag: <number> uses
+    text: It can only be used n times.
+    procedure:
+      - subtract 1 from uses
+      - is uses<0:
+          yes: remove this from gear
+  - tag: use twice
+    text: Use two every time.
+    procedure:
+      - subtract 1 from uses
+      - is uses<0:
+          yes: remove this from gear
+  - tag: <number> ammo
+    text: It counts as ammunition for appropriate ranged weapons. The number indicated does not represent individual arrows or sling stones, but represents what you have left on hand.
+    procedure:
+      is ammo=0:
+        yes: remove this from gear
+  - tag: Forceful
+    text: It can knock someone back a pace, maybe even off their feet.
+  - tag: <number> damage
+    text: It is particularly harmful to your enemies. When you deal damage, you add n to it.
+    procedure: modify once damage number
+  - tag: Ignores Armor
+    text: Don’t subtract armor from the damage taken.
+    procedure: show "Ignores armor" with "deal damage"
+  - tag: Messy
+    text: It does damage in a particularly destructive way, ripping people and things apart.
+  - tag: <number> piercing
+    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
+    procedure: show number piercing with "deal damage"
+  - tag: Precise
+    text: It rewards careful strikes. You use DEX to hack and slash with this weapon, not STR.
+    procedure: modify Hack and Slash roll+Str = roll+Dex
+  - tag: Reload
+    text: After you attack with it, it takes more than a moment to reset for another attack.
+  - tag: Stun
+    text: When you attack with it, it does stun damage instead of normal damage.
+  - tag: Thrown
+    text: Throw it at someone to hurt them. If you volley with this weapon, you can’t choose to mark off ammo on a 7–9; once you throw it, it’s gone until you can recover it.
+  - tag: Hand
+    text: It’s useful for attacking something within your reach, no further.
+  - tag: Close
+    text: It’s useful for attacking something at arm’s reach plus a foot or two.
+  - tag: Reach
+    text: It’s useful for attacking something that’s several feet away—maybe as far as ten.
+  - tag: Near
+    text: It’s useful for attacking if you can see the whites of their eyes.
+  - tag: Far
+    text: It’s useful for attacking something in shouting distance.
+  - tag: <number> armor
+    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack. It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
+    procedure: modify armor = number
+  - tag: <number> armor
+    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
+    procedure: take +number ongoing to armor
+  - tag: Clumsy
+    text: It’s tough to move around with. -1 ongoing while using it. This penalty is cumulative.
+    procedure: take -1 ongoing to all
+  - tag: On use <procedure>
+    procedure: <procedure>
+equipment:
+  - &coin name: coin
+    tags: []
+    cost: 1
+    weight: 0
+  - &Ragged_Bow name: Ragged Bow
+    tags: [Near]
+    cost: 15
+    weight: 2
+  - &Fine_Bow name: Fine Bow
+    tags: [Near, Far]
+    cost: 60
+    weight: 2
+  - &Hunters_Bow name: Hunter's Bow
+    tags: [Near, Far]
+    cost: 100
+    weight: 1
+  - &Crossbow name: Crossbow
+    tags: [Near, +1 damage, reload]
+    cost: 35
+    weight: 3
+  - &Bundle_of_Arrows name: Bundle of Arrows
+    tags: [3 ammo]
+    cost: 1
+    weight: 1
+  - &Elven_Arrows name: Elven Arrows
+    tags: [4 ammo]
+    cost: 1
+    weight: 1
+  - &Club name: Club
+    tags: [Close]
+    cost: 1
+    weight: 2
+  - &Shillelagh name: Shillelagh
+    tags: [Close]
+    cost: 1
+    weight: 2
+  - &Staff name: Staff
+    tags: [Close, Two-handed]
+    cost: 1
+    weight: 1
+  - &Dagger name: Dagger
+    tags: [Hand]
+    cost: 2
+    weight: 1
+  - &Shiv name: Shiv
+    tags: [Hand]
+    cost: 2
+    weight: 1
+  - &Knife name: Knife
+    tags: [Hand]
+    cost: 2
+    weight: 1
+  - &Throwing_Dagger name: Throwing Dagger
+    tags: [Thrown, Near]
+    cost: 1
+    weight: 1
+  - &Short_Sword name: Short Sword
+    tags: [Close]
+    cost: 8
+    weight: 1
+  - &Axe name: Axe
+    tags: [Close]
+    cost: 8
+    weight: 1
+  - &Warhammer name: Warhammer
+    tags: [Close]
+    cost: 8
+    weight: 1
+  - &Mace name: Mace
+    tags: [Close]
+    cost: 8
+    weight: 1
+  - &Spear name: Spear
+    tags: [Reach, Thrown, Near]
+    cost: 5
+    weight: 1
+  - &Long_Sword name: Long Sword
+    tags: [Close, +1 damage]
+    cost: 15
+    weight: 2
+  - &Battle_Axe name: Battle Axe
+    tags: [Close, +1 damage]
+    cost: 15
+    weight: 2
+  - &Flail name: Flail
+    tags: [Close, +1 damage]
+    cost: 15
+    weight: 2
+  - &Halberd name: Halberd
+    tags: [Reach, +1 damage, Two-handed]
+    cost: 9
+    weight: 2
+  - &Rapier name: Rapier
+    tags: [Close, Percise]
+    cost: 25
+    weight: 1
+  - &Dueling_Rapier name: Dueling Rapier
+    tags: [Close, 1 piercing, Percise]
+    cost: 50
+    weight: 2
+  - &Leather_Armor name: Leather Armor
+    tags: [1 armor, worn]
+    cost: 10
+    weight: 1
+  - &Chainmail name: Chainmail
+    tags: [1 armor, worn]
+    cost: 10
+    weight: 1
+  - &Scale_Mail name: Scale Mail
+    tags: [2 armor, worn, clumsy]
+    cost: 50
+    weight: 3
+  - &Plate_armor name: Plate armor
+    tags: [3 armor, worn, clumsy]
+    cost: 350
+    weight: 4
+  - &Shield name: Shield
+    tags: [+1 armor]
+    cost: 15
+    weight: 2
+  - &Adventuring_Gear name: Adventuring Gear
+    tags: [5 uses]
+    cost: 20
+    weight: 1
+    description: Adventuring gear is a collection of useful mundane items such as chalk, poles, spikes, ropes, etc. When you rummage through your adventuring gear for some useful mundane item, you find what you need and mark off a use.
+  - &Bandages name: Bandages
+    tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: do nothing }]
+    cost: 5
+    weight: 0
+    description: When you have a few minutes to bandage someone else’s wounds, heal them of 4 damage and expend a use.
+  - &Poultices_and_Herbs name: Poultices and Herbs
+    tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: do nothing }]
+    cost: 10
+    weight: 1
+    description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
+  - &Healing_Potion name: Healing Potion
+    tags:
+      - 1 uses
+      - On use choose are you healing yourself:
+          yes:
+            choose are you removeing a debility or healing yourself:
+              removeing a debility: remove a debility
+              healing yourself: heal 10
+          no: do nothing
+    cost: 50
+    weight: 0
+    description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
+  - &Keg_of_Dwarven_Stout name: Keg of Dwarven Stout
+    tags: [1 uses, On use take +1 forward on Carouse]
+    cost: 10
+    weight: 4
+    description: When you open a keg of dwarven stout and let everyone drink freely, take +1 to your Carouse roll. If you drink a whole keg yourself, you are very, very drunk.
+  - &Bag_of_Books name: Bag of Books
+    tags: [5 uses, On use take +1 forward on Spout Lore]
+    cost: 10
+    weight: 2
+    description: When your bag of books contains just the right book for the subject you’re spouting lore on, consult the book, mark off a use, and take +1 to your roll.
+  - &Antitoxin name: Antitoxin
+    tags: [1 uses]
+    cost: 10
+    weight: 0
+    description: When you drink antitoxin, you’re cured of one poison affecting you.
+  - &Dungeon_Rations name: Dungeon Rations
+    tags: [Ration, 5 use]
+    cost: 3
+    weight: 1
+    description: Not tasty, but not bad either.
+  - &Personal_Feast name: Personal Feast
+    tags: [Ration, 1 use]
+    cost: 10
+    weight: 1
+    description: Ostentatious to say the least.
+  - &Dwarven_Hardtack name: Dwarven Hardtack
+    tags: [Requires Dwarf, Ration, 7 uses]
+    cost: 3
+    weight: 1
+    description: Dwarves say it tastes like home. Everyone else says it tastes like home, if home is a hog farm, and on fire.
+  - &Elven_Bread name: Elven Bread
+    tags: [Ration, 7 uses]
+    cost: 10
+    weight: 1
+    description: Only the greatest of elf-friends are treated to this rare delicacy.
+  - &Halfling_Pipeleaf name: Halfling Pipeleaf
+    tags: [6 uses, use twice, On use take +1 forward to Parley]
+    cost: 5
+    weight: 0
+    description: When you share halfling pipeleaf with someone, expend two uses and take +1 forward to parley with them.
+  - &Oil_of_Tagit name: Oil of Tagit
+    tags: [Dangerous, Applied, 3 uses]
+    cost: 15
+    weight: 0
+    description: The target falls into a light sleep.
+  - &Bloodweed name: Bloodweed
+    tags: [Dangerous, Touch, 3 uses]
+    cost: 12
+    weight: 0
+    description: Until cured, whenever the afflicted rolls damage, they roll an additional d4 and subtract that result from their normal damage.
+  - &Goldenroot name: Goldenroot
+    tags: [Dangerous, Applied, 3 uses]
+    cost: 20
+    weight: 0
+    description: The target treats the next creature they see as a trusted ally, until proved otherwise.
+  - &Serpents_Tears name: Serpent’s Tears
+    tags: [Dangerous, Applied, 3 uses]
+    cost: 10
+    weight: 0
+    description: Anyone dealing damage against the target rolls twice and takes the better result.
+all techniques:
+  - name: Flowing
+    text: If your attack kills a target, you may immediately attack a new target as if you had gotten a 7-9 on the move you initially used.
+    before: do nothing
+    after:
+      choose did your attack killed the target?:
+        no: do nothing
+        yes:
+          choose do you want to immediately attack a new target as if you had gotten a 7-9 on the move you initially used?:
+            no: do nothing
+            # This can only happen with melee attack, so this would act like Hack and Slash 
+            yes: [deal damage, take damage]
+  - name: Freezing
+    text: Your attack freezes and shatters a portion of your opponent’s armor. After you deal your damage, reduce their armor by 1 until they repair it.
+    before: do nothing
+    after: do nothing
+  - name: Galvanic
+    text: Electricity courses through your blade, numbing one of your target’s limbs.
+    before: do nothing
+    after: do nothing
+  - name: Void-Edged
+    text: The edge of your weapon hums with an unearthly light. You may slice through inanimate objects with ease and add the ‘messy’ tag to your attack.
+    before: do nothing
+    after: do nothing
+  - name: Mirage
+    text: You create illusions of yourself that strike additional enemies near your target. Illusions deal your damage but do not apply any techniques.
+    before: do nothing
+    after: deal damage
+  - name: Tethering
+    text: Your attack pins your target’s shadow to the ground, preventing them from moving more than a few feet from their current location.
+    before: do nothing
+    after: do nothing
+  - name: Elaborate
+    text: >
+      When you apply this technique, roll+dex.
+        * On a 10+, deal an additional 1d8 damage.
+        * On a 7-9, this technique has do nothing, but it looks really cool!
+        * On a miss, your showboating costs you in some substantial way – the GM will tell you how.
+    before:
+      roll roll+dex:
+        success: take +1d8 forward to damage
+        partial success: this technique has do nothing, but it looks really cool!
+        miss: your showboating costs you in some substantial way – the GM will tell you how.
+    after: do nothing
+  - name: Earthshaker
+    text: Your attack concludes with an eruption of stone and earth from the ground, launching your target into the air.
+    before: do nothing
+    after: do nothing
+  - name: Burning
+    text: Your attack deals an extra 1d4 damage and lights anything flammable.
+    before: take +1d4 forward to damage
+    after: anything flammable is lit up
+  - name: Soul-Siphoning
+    text: Your attack heals you for 1d4. Heal 1d8 instead if this attack kills your target.
+    before: do nothing
+    after:
+      choose did the attack kill the target?:
+        yes: heal 1d8
+        no: heal 1d4
+  - name: Torrential
+    text: Your attack ends with a flurry of strikes that your opponent must dedicate effort to blocking or avoiding. If they instead attack you in response to your attack, deal your damage again (this does not apply techniques).
+    before: do nothing
+    after:
+      choose did your opponent attack you?:
+        yes: deal damage
+        no: do nothing
+  - name: Burst
+    text: Your attack deals an additional 1d4 damage and gains the ‘forceful’ tag.
+    before: take +1d4 forward to damage
+    after: do nothing
+  - name: Quicksilver
+    text: Your blade cuts faster than the eye can see, preventing your opponent from mounting a proper defense. Gain 2 piercing on your attack.
+    before: take +2 forward to piercing
+    after: do nothing
+  - name: Warding
+    text: Your attack creates a ring of light around you and your target that other creatures (and their projectiles) cannot cross.
+    before: do nothing
+    after: do nothing
+  - name: Dust Devil
+    text: Your attack kicks up a small tornado of dust and grit at your target’s feet, obscuring visibility.
+    before: do nothing
+    after: do nothing
+cleric spells:
+  - name: Light
+    level: 0
+    ongoing: false
+    text: An item you touch glows with divine light, about as bright as a torch. It gives off no heat or sound and requires no fuel but is otherwise like a mundane torch. You have complete control of the color of the flame. The spell lasts as long as it is in your presence.
+  - name: Sanctify
+    level: 0
+    ongoing: false
+    text: Food or water you hold in your hands while you cast this spell is consecrated by your deity. In addition to now being holy or unholy, the affected substance is purified of any mundane spoilage.
+  - name: Guidance
+    level: 0
+    ongoing: false
+    text: The symbol of your deity appears before you and gestures towards the direction or course of action your deity would have you take then disappears. The message is through gesture only; your communication through this spell is severely limited.
+  - name: Bless
+    level: 1
+    ongoing: true
+    text: Your deity smiles upon a combatant of your choice. They take +1 ongoing so long as battle continues and they stand and fight. While this spell is ongoing you take -1 to cast a spell.
+  - name: Cure Light Wounds
+    level: 1
+    ongoing: false
+    text: At your touch wounds scab and bones cease to ache. Heal an ally you touch of 1d8 damage.
+  - name: Detect Alignment
+    level: 1
+    ongoing: false
+    text: >
+      When you cast this spell choose an alignment: Good, Evil, Lawful, or Chaotic. One of your senses is briefly able to detect that alignment. The GM will tell you what here is of that alignment.
+  - name: Cause Fear
+    level: 1
+    ongoing: true
+    text: >
+      Choose a target you can see and a nearby object.
+      The target is afraid of the object so long as you maintain the spell.
+      Their reaction is up to them: flee, panic, beg, fight.
+      While this spell is ongoing you take -1 to cast a spell.
+      You cannot target entities with less than animal intelligence (magical constructs, undead, automatons, and the like).
+  - name: Magic Weapon
+    level: 1
+    ongoing: true
+    text: The weapon you hold while casting does +1d4 damage until you dismiss this spell. While this spell is ongoing you take -1 to cast a spell.
+  - name: Sanctuary
+    level: 1
+    ongoing: false
+    text: As you cast this spell, you walk the perimeter of an area, consecrating it to your deity. As long as you stay within that area you are alerted whenever someone acts with malice within the sanctuary (including entering with harmful intent). Anyone who receives healing within a sanctuary heals +1d4 HP.
+  - name: Speak With Dead
+    level: 1
+    ongoing: false
+    text: A corpse converses with you briefly. It will answer any three questions you pose to it to the best of the knowledge it had in life and the knowledge it gained in death.
+  - name: Animate Dead
+    level: 3
+    ongoing: true
+    text: >
+      You invoke a hungry spirit to possess a recently-dead body and serve you. This creates a zombie that follows your orders to the best of its limited abilities. Treat the zombie as a character, but with access to only the basic moves. It has a +1 modifier for all stats and 1 HP. The zombie also gets your choice of 1d4 of these traits:
+        * It’s talented. Give one stat a +2 modifier.
+        * It’s durable. It has +2 HP for each level you have.
+        * It has a functioning brain and can complete complex tasks.
+        * It does not appear obviously dead, at least for a day or two.
+      The zombie lasts until it is destroyed by taking damage in excess of its HP, or until you end the spell. While this spell is ongoing you take -1 to cast a spell.
+  - name: Cure Moderate Wounds
+    level: 3
+    ongoing: false
+    text: You staunch bleeding and set bones through magic. Heal an ally you touch of 2d8 damage.
+  - name: Darkness
+    level: 3
+    ongoing: true
+    text: >
+      Choose an area you can see: it’s filled with supernatural darkness and shadow. While this spell is ongoing you take -1 to cast a spell.
+  - name: Resurrection
+    level: 3
+    ongoing: false
+    text: >
+      Tell the GM you would like to resurrect a corpse whose soul has not yet fully departed this world. Resurrection is always possible, but the GM will give you one or more (possibly all) of these conditions to fulfill:
+          * It’s going to take days/weeks/months
+          * You must get help from
+          * It will require a lot of money
+          * You must sacrifice to do it
+      The GM may, depending on the circumstances, allow you to resurrect the corpse now, with the understanding that the conditions must be met before it’s permanent, or require you to meet the conditions before the corpse is resurrected.
+  - name: Hold Person
+    level: 3
+    ongoing: false
+    text: Choose a person you can see. Until you cast a spell or leave their presence they cannot act except to speak. This effect ends immediately if the target takes damage from any source.
+  - name: Cure Critical Wounds
+    level: 5
+    ongoing: false
+    text: Heal an ally you touch of 3d8 damage
+  - name: Divination
+    level: 5
+    ongoing: false
+    text: Name a person, place, or thing you want to learn about. Your deity grants you visions of the target, as clear as if you were there.
+  - name: Contagion
+    level: 5
+    ongoing: true
+    text: Choose a creature you can see. Until you end this spell, the target suffers from a disease of your choice. While this spell is ongoing you take -1 to cast a spell.
+  - name: Words of the Unspeaking
+    level: 5
+    ongoing: false
+    text: With a touch you speak to the spirits within things. The non-living object you touch answers three questions you pose, as best it can.
+  - name: True Seeing
+    level: 5
+    ongoing: true
+    text: Your vision is opened to the true nature of everything you lay your eyes on. You pierce illusions and see things that have been hidden. The GM will describe the area before you ignoring any illusions and falsehoods, magical or otherwise. While this spell is ongoing you take -1 to cast a spell.
+  - name: Trap Soul
+    level: 5
+    ongoing: false
+    text: You trap the soul of a dying creature within a gem. The trapped creature is aware of its imprisonment but can still be manipulated through spells, parley, and other effects. All moves against the trapped creature are at +1. You can free the soul at any time but it can never be recaptured once freed.
+  - name: Word of Recall
+    level: 7
+    ongoing: false
+    text: Choose a word. The first time after casting this spell that you speak the chosen word, you and any allies touching you when you cast the spell are immediately returned to the exact spot where you cast the spell. You can only maintain a single location; casting Word of Recall again before speaking the word replaces the earlier spell.
+  - name: Heal
+    level: 7
+    ongoing: false
+    text: Touch an ally and you may heal their damage a number of points up to your maximum HP.
+  - name: Harm
+    level: 7
+    ongoing: false
+    text: Touch an enemy and strike them with divine wrath—deal 2d8 damage to them and 1d6 damage to yourself. This damage ignores armor.
+  - name: Sever
+    level: 7
+    ongoing: true
+    text: Choose an appendage on the target such as an arm, tentacle, or wing. The appendage is magically severed from their body, causing no damage but considerable pain. Missing an appendage may, for example, keep a winged creature from flying, or a bull from goring you on its horns. While this spell is ongoing you take -1 to cast a spell.
+  - name: Mark of Death
+    level: 7
+    ongoing: false
+    text: Choose a creature whose true name you know. This spell creates permanent runes on a target surface that will kill that creature, should they read them.
+  - name: Control Weather
+    level: 7
+    ongoing: false
+    text: Pray for rain—or sun, wind, or snow. Within a day or so, your god will answer. The weather will change according to your will and last a handful of days.
+  - name: Storm of Vengeance
+    level: 9
+    ongoing: false
+    text: >
+      Your deity brings the unnatural weather of your choice to pass. Rain of blood or acid, clouds of souls, wind that can carry away buildings, or any other weather you can imagine: ask and it shall come.
+  - name: Repair
+    level: 9
+    ongoing: false
+    text: Choose one event in the target’s past. All effects of that event, including damage, poison, disease, and magical effects, are ended and repaired. HP and diseases are healed, poisons are neutralized, magical effects are ended.
+  - name: Divine Presence
+    level: 9
+    ongoing: true
+    text: Every creature must ask your leave to enter your presence, and you must give permission aloud for them to enter. Any creature without your leave takes an extra 1d10 damage whenever they take damage in your presence. While this spell is ongoing you take -1 to cast a spell.
+  - name: Consume Unlife
+    level: 9
+    ongoing: false
+    text: The mindless undead creature you touch is destroyed and you steal its death energy to heal yourself or the next ally you touch. The amount of damage healed is equal to the HP that the creature had remaining before you destroyed it.
+  - name: Plague
+    level: 9
+    ongoing: true
+    text: Name a city, town, encampment, or other place where people live. As long as this spell is active that place is beset by a plague appropriate to your deity’s domains (locusts, death of the first born, etc.) While this spell is ongoing you take -1 to cast a spell.
+wizard spells:
+  - name: Light
+    level: 0
+    ongoing: false
+    tags: []
+    text: An item you touch glows with arcane light, about as bright as a torch. It gives off no heat or sound and requires no fuel but it is otherwise like a mundane torch. You have complete control of the color of the flame. The spell lasts as long as it is in your presence.
+  - name: Unseen Servant
+    level: 0
+    ongoing: true
+    tags: []
+    text: You conjure a simple invisible construct that can do nothing but carry items. It has Load 3 and carries anything you hand to it. It cannot pick up items on its own and can only carry those you give to it. Items carried by an unseen servant appear to float in the air a few paces behind you. An unseen servant that takes damage or leaves your presence is immediately dispelled, dropping any items it carried. Otherwise the unseen servant serves you until you end the spell.
+  - name: Prestidigitation
+    level: 0
+    ongoing: false
+    tags: []
+    text: >
+      You perform minor tricks of true magic. If you touch an item as part of the casting you can make cosmetic changes to it: clean it, soil it, cool it, warm it, flavor it, or change its color. If you cast the spell without touching an item you can instead create minor illusions no bigger than yourself. Prestidigitation illusions are crude and clearly illusions—they won’t fool anyone, but they might entertain them.
+  - name: Contact Spirits
+    level: 1
+    ongoing: false
+    tags: [summoning]
+    text: Name the spirit you wish to contact (or leave it to the GM). You pull that creature through the planes, just close enough to speak to you. It is bound to answer any one question you ask to the best of its ability.
+  - name: Detect Magic
+    level: 1
+    ongoing: false
+    tags: [divination]
+    text: One of your senses is briefly attuned to magic. The GM will tell you what here is magical.
+  - name: Charm Person
+    level: 1
+    ongoing: true
+    tags: [enchantment]
+    text: The person (not beast or monster) you touch while casting this spell counts you as a friend until they take damage or you prove otherwise.
+  - name: Invisibility
+    level: 1
+    ongoing: true
+    tags: [illusion]
+    text: >
+      Touch an ally: nobody can see them. They’re invisible! The spell persists until the target attacks or you dismiss the effect. While the spell is ongoing you can’t cast a spell.
+  - name: Magic Missile
+    level: 1
+    ongoing: false
+    tags: [evocation]
+    text: Projectiles of pure magic spring from your fingers. Deal 2d4 damage to one target.
+  - name: Alarm
+    level: 1
+    ongoing: false
+    tags: []
+    text: Walk a wide circle as you cast this spell. Until you prepare spells again your magic will alert you if a creature crosses that circle. Even if you are asleep, the spell will shake you from your slumber.
+  - name: Dispel Magic
+    level: 3
+    ongoing: false
+    tags: []
+    text: >
+      Choose a spell or magic effect in your presence: this spell rips it apart. Lesser spells are ended, powerful magic is just reduced or dampened so long as you are nearby.
+  - name: Visions Through Time
+    level: 3
+    ongoing: false
+    tags: [divination]
+    text: Cast this spell and gaze into a reflective surface to see into the depths of time. The GM will reveal the details of a grim portent to you—a bleak event that will come to pass without your intervention. They’ll tell you something useful about how you can interfere with the grim portent’s dark outcomes. Rare is the portent that claims “You’ll live happily ever after.” Sorry.
+  - name: Fireball
+    level: 3
+    ongoing: false
+    tags: [evocation]
+    text: You evoke a mighty ball of flame that envelops your target and everyone nearby, inflicting 2d6 damage which ignores armor.
+  - name: Mimic
+    level: 3
+    ongoing: true
+    tags: []
+    text: You take the form of someone you touch while casting this spell. Your physical characteristics match theirs exactly but your behavior may not. This change persists until you take damage or choose to return to your own form. While this spell is ongoing you lose access to all your wizard moves.
+  - name: Mirror Image
+    level: 3
+    ongoing: false
+    tags: [illusion]
+    text: You create an illusory image of yourself. When you are attacked, roll a d6. On a 4, 5, or 6 the attack hits the illusion instead, the image then dissipates and the spell ends.
+  - name: Sleep
+    level: 3
+    ongoing: false
+    tags: [enchantment]
+    text: >
+      1d4 enemies you can see of the GM’s choice fall asleep. Only creatures capable of sleeping are affected. They awake as normal: loud noises, jolts, pain.
+  - name: Cage
+    level: 5
+    ongoing: true
+    tags: [evocation]
+    text: The target is held in a cage of magical force. Nothing can get in or out of the cage. The cage remains until you cast another spell or dismiss it. While the spell is ongoing, the caged creature can hear your thoughts and you cannot leave sight of the cage.
+  - name: Contact Other Plane
+    level: 5
+    ongoing: false
+    tags: [divination]
+    text: You send a request to another plane. Specify who or what you’d like to contact by location, type of creature, name, or title. You open a two-way communication with that creature. Your communication can be cut off at any time by you or the creature you contacted.
+  - name: Polymorph
+    level: 5
+    ongoing: false
+    tags: [enchantment]
+    text: >
+      Your touch reshapes a creature entirely, they stay in the form you craft until you cast a spell. Describe the new shape you craft, including any stat changes, significant adaptations, or major weaknesses. The GM will then tell you one or more of these:
+          * The form will be unstable and temporary
+          * The creature’s mind will be altered as well
+          * The form has an unintended benefit or weakness
+  - name: Summon Monste
+    level: 5
+    ongoing: true
+    tags: [summoning]
+    text: >
+      A monster appears and aids you as best it can. Treat it as your character, but with access to only the basic moves. It has +1 modifier for all stats, 1 HP, and uses your damage dice. The monster also gets your choice of 1d6 of these traits:
+        * It has +2 instead of +1 to one stat
+        * It’s not reckless
+        * It does 1d8 damage
+        * Its bond to your plane is strong: +2 HP for each level you have
+        * It has some useful adaptation
+      The GM will tell you the type of monster you get based on the traits you select. The creature remains on this plane until it dies or you dismiss it. While the spell is ongoing you take -1 to cast a spell.
+  - name: Dominate
+    level: 7
+    ongoing: true
+    tags: [enchantment]
+    text: >
+      Your touch pushes your mind into someone else’s. You gain 1d4 hold. Spend one hold to make the target take one of these actions:
+
+        * Speak a few words of your choice
+        * Give you something they hold
+        * Make a concerted attack on a target of your choice
+        * Truthfully answer one question
+      If you run out of hold the spell ends. If the target takes damage you lose 1 hold. While the spell is ongoing you cannot cast a spell.
+  - name: True Seeing
+    level: 7
+    ongoing: true
+    tags: [divination]
+    text: You see all things as they truly are. This effect persists until you tell a lie or dismiss the spell. While this spell is ongoing you take -1 to cast a spell.
+  - name: Shadow Walk
+    level: 7
+    ongoing: false
+    tags: [illusion]
+    text: The shadows you target with this spell become a portal for you and your allies. Name a location, describing it with a number of words up to your level. Stepping through the portal deposits you and any allies present when you cast the spell at the location you described. The portal may only be used once by each ally.
+  - name: Contingency
+    level: 7
+    ongoing: false
+    tags: [evocation]
+    text: Choose a 5th level or lower spell you know. Describe a trigger condition using a number of words equal to your level. The chosen spell is held until you choose to unleash it or the trigger condition is met, whichever happens first. You don’t have to roll for the held spell, it just takes effect. You may only have a single contingent spell held at a time; if you cast Contingency while you have a held spell, the new held spell replaces the old one.
+  - name: Cloudkill
+    level: 7
+    ongoing: true
+    tags: [summoning]
+    text: A cloud of fog drifts into this realm from beyond the Black Gates of Death, filling the immediate area. Whenever a creature in the area takes damage it takes an additional, separate 1d6 damage which ignores armor. This spell persists so long as you can see the affected area, or until you dismiss it.
+  - name: Antipathy
+    level: 7
+    ongoing: true
+    tags: [enchantment]
+    text: Choose a target and describe a type of creature or an alignment. Creatures of the specified type or alignment cannot come within sight of the target. If a creature of the specified type does find itself within sight of the target, it immediately flees. This effect continues until you leave the target’s presence or you dismiss the spell. While the spell is ongoing you take -1 to cast a spell.
+  - name: Alert
+    level: 9
+    ongoing: false
+    tags: [divination]
+    text: Describe an event. The GM will tell you when that event occurs, no matter where you are or how far away the event is. If you choose, you can view the location of the event as though you were there in person. You can only have one Alert active at a time.
+  - name: Soul Gem
+    level: 9
+    ongoing: false
+    tags: []
+    text: You trap the soul of a dying creature within a gem. The trapped creature is aware of its imprisonment but can still be manipulated through spells, parley, and other effects. All moves against the trapped creature are at +1. You can free the soul at any time but it can never be recaptured once freed.
+  - name: Shelter
+    level: 9
+    ongoing: true
+    tags: [evocation]
+    text: You create a structure out of pure magical power. It can be as large as a castle or as small as a hut, but is impervious to all non-magical damage. The structure endures until you leave it or you end the spell.
+  - name: Perfect Summons
+    level: 9
+    ongoing: false
+    tags: [summoning]
+    text: You teleport a creature to your presence. Name a creature or give a short description of a type of creature. If you named a creature, that creature appears before you. If you described a type of creature, a creature of that type appears before you.
 playbooks:
   arcane duelist:
     in a sentence: A warrior that incorperates magic into his fighting style
@@ -2469,1100 +3566,3 @@ playbooks:
       - name: Self-Powered
         type: advanced
         text: When you have time, arcane materials, and a safe space, you can create your own place of power. Describe to the GM what kind of power it is and how you’re binding it to this place, the GM will tell you one kind of creature that will have an interest in your workings.
-basic moves: 
-  - name: Hack and Slash
-    type: basic
-    text: >
-      When you attack an enemy in melee, roll+Str.
-      * On a 10+, you deal your damage to the enemy and avoid their attack. At your option, you may choose to do +1d6 damage but expose yourself to the enemy’s attack.
-      * On a 7–9, you deal your damage to the enemy and the enemy makes an attack against you.
-    trigger: When you attack an enemy in melee
-    procedure:
-      roll roll+Str:
-        success:
-          choose do +1d6 damage but expose yourself to the enemy’s attack?:
-            yes: [deal damage+1d6, take damage]
-            no: deal damage
-        partial success: [deal damage, take damage]
-  - name: Volley
-    type: basic
-    text: >
-      When you take aim and shoot at an enemy at range, roll+Dex.
-      * On a 10+, you have a clear shot — deal your damage.
-      * On a 7–9, choose one (whichever you choose you deal your damage):
-        * You have to move to get the shot placing you in danger as described by the GM.
-        * You have to take what you can get: -1d6 damage.
-        * You have to take several shots, reducing your ammo by one.
-    trigger: When you take aim and shoot at an enemy at range
-    procedure:
-      roll roll+Dex:
-        hit: deal damage
-        partial success:
-          choose:
-            You have to move to get the shot placing you in danger as described by the GM.: You have to move to get the shot placing you in danger as described by the GM.
-            You have to take what you can get, -1d6 damage.: take -1d6 forward to damage
-            You have to take several shots, reducing your ammo by one.: use gear with tag ammo
-  - name: Defy Danger
-    type: basic
-    text: >
-      When you act despite an imminent threat or suffer a calamity, say how you deal with it and roll. If you do it
-      * by powering through, +Str
-      * by getting out of the way or acting fast, +Dex
-      * by enduring, +Con
-      * with quick thinking, +Int
-      * through mental fortitude, +Wis
-      * using charm and social grace, +Cha
-
-      * On a 10+, you do what you set out to, the threat doesn’t come to bear.
-      * On a 7–9, you stumble, hesitate, or flinch: the GM will offer you a worse outcome, hard bargain, or ugly choice.
-    trigger: When you act despite an imminent threat or suffer a calamity
-    procedure:
-      - choose How do you deal with it?:
-          By powering through (Str): modify once roll +Str
-          By getting out of the way or acting fast (Dex): modify once roll +Dex
-          By enduring (Con): modify once roll +Con
-          With quick thinking (Str): modify once roll +Int
-          Through mental fortitude (Wis): modify once roll +Wis
-          Using charm and social grace (Cha): modify once roll +Cha
-      - roll roll:
-          success: You do what you set out to, the threat doesn’t come to bear.
-          partial success: "You stumble, hesitate, or flinch: the GM will offer you a worse outcome, hard bargain, or ugly choice."
-  - name: Defend
-    type: basic
-    text: >
-      When you stand in defense of a person, item, or location under attack, roll+Con.
-      * On a 10+, hold 3.
-      * On a 7–9, hold 1.
-      As long as you stand in defense, when you or the thing you defend is attacked you may spend hold, 1 for 1, to choose an option:
-      * Redirect an attack from the thing you defend to yourself.
-      * Halve the attack’s effect or damage.
-      * Open up the attacker to an ally giving that ally +1 forward against the attacker.
-      * Deal damage to the attacker equal to your level.
-    trigger: When you stand in defense of a person, item, or location under attack
-    procedure:
-      - roll roll+Con:
-          success: hold 3
-          partial success: hold 1
-      - use:
-          Redirect an attack from the thing you defend to yourself.: Redirect an attack from the thing you defend to yourself.
-          Halve the attack’s effect or damage.: Halve the attack’s effect or damage.
-          Open up the attacker to an ally giving that ally +1 forward against the attacker.:
-            choose Is the ally you?:
-              yes: modify against the enemy +1 forward
-              no: do nothing
-          Deal damage to the attacker equal to your level.: deal level/2
-  - name: Spout Lore
-    type: basic
-    text: >
-      When you consult your accumulated knowledge about something, roll+Int.
-      * On a 10+, the GM will tell you something interesting and useful about the subject relevant to your situation.
-      * On a 7–9, the GM will only tell you something interesting—it’s on you to make it useful.
-      The GM might ask you “How do you know this?” Tell them the truth, now.
-    trigger: When you consult your accumulated knowledge about something
-    procedure:
-      roll roll+Int:
-        success: The GM will tell you something interesting and useful about the subject relevant to your situation, and might ask you “How do you know this?” Tell them the truth, now.
-        patrial success: The GM will only tell you something interesting — it’s on you to make it useful, and might ask you “How do you know this?” Tell them the truth, now.
-  - name: Discern Realities
-    type: basic
-    text: >
-      When you closely study a situation or person, roll+Wis.
-      * On a 10+, ask the GM 3 questions from the list below.
-      * On a 7–9, ask 1.
-
-      Either way, take +1 forward when acting on the answers.
-      * What happened here recently?
-      * What is about to happen?
-      * What should I be on the lookout for?
-      * What here is useful or valuable to me?
-      * Who’s really in control here?
-      * What here is not what it appears to be?
-    trigger: When you closely study a situation or person
-    procedure:
-      - roll roll+Wis:
-          success: choose 3
-          partial succes: choose 1
-      - options: 
-          - What happened here recently?
-          - What is about to happen?
-          - What should I be on the lookout for?
-          - What here is useful or valuable to me?
-          - Who’s really in control here?
-          - What here is not what it appears to be?
-      - take +1 forward when acting on the answers
-  - name: Parley
-    type: basic
-    text: >
-      When you have leverage on a GM Character and manipulate them, roll+Cha.
-      Leverage is something they need or want.
-      * On a 10+, they do what you ask if you first promise what they ask of you.
-      * On a 7–9, they will do what you ask, but need some concrete assurance of your promise, right now.
-    trigger: When you have leverage on a GM Character and manipulate them
-    procedure:
-      roll roll+Cha:
-        success: They do what you ask if you first promise what they ask of you.
-        patrial success: They will do what you ask, but need some concrete assurance of your promise, right now.
-  - name: Aid or Interfere
-    type: basic
-    text: >
-      When you help or hinder someone you have a bond with, roll+Bond with them.
-      * On a 10+ they take +1 or -2, your choice. 
-      * On a 7–9 you also expose yourself to danger, retribution, or cost.
-    trigger: When you help or hinder someone you have a bond with
-    procedure:
-      roll roll+bond:
-        success:
-          choose wether they take +1 or -2:
-            They take +1: They take +1
-            They take -2: They take -2
-        partial success also: You expose yourself to danger, retribution, or cost.
-special moves:
-  - name: Last Breath
-    type: special
-    text: >
-      When you’re dying you catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
-      Then roll (just roll, +nothing — yeah, Death doesn’t care how tough or cool you are).
-      * On a 10+, you’ve cheated Death — you’re in a bad spot but you’re still alive.
-      * On a 7–9, Death himself will offer you a bargain. Take it and stabilize or refuse and pass beyond the Black Gates into whatever fate awaits you.
-      * On 6-, your fate is sealed. You’re marked as Death’s own and you’ll cross the threshold soon. The GM will tell you when.
-    trigger: on hp=0
-    procedure:
-      - You catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
-      - roll roll:
-          success:
-            - set hp=1
-            - You’ve cheated Death — you’re in a bad spot but you’re still alive.
-          partial success:
-            choose death himself offers you a bargain:
-              Take Death’s bargain and stabilize: set hp=1
-              Don’t take Death’s bargain and pass beyond the Black Gates into whatever fate awaits you: die
-          miss: die
-  - name: Encumrance
-    type: special
-    text: >
-      When you make a move while carrying weight you may be encumbered. If your weight carried is:
-
-      * Equal to or less than your load, you suffer no penalty
-      * Less than or equal to your load+2, you take -1 ongoing until you lighten your burden
-      * Greater than your load+2, you have a choice: drop at least 1 weight and roll at -1, or automatically fail
-    trigger: on wieght>load
-    procedure:
-      is weight>load+2:
-        yes: modify all autofail forced ongoing until weight<=load+2
-        no: modify all -1 forced ongoing until weight>load+2||wright<=load
-  - name: Make Camp
-    type: special
-    text: >
-      When you settle in to rest consume a ration.
-      If you’re somewhere dangerous decide the watch order as well.
-      If you have enough XP you may level up.
-      When you wake from at least a few uninterrupted hours of sleep heal damage equal to half your max HP.
-    trigger: When you settle in to rest
-    procedure:
-      - use gear rations
-      - If you’re somewhere dangerous decide the watch order as well.
-      - is level up allowed:
-          yes: trigger Level up
-          no: do nothing
-      - choose Did you get at least a few uninterrupted hours of sleep?:
-          yes: change hp +maxHP/2
-          no: do nothing
-  - name: Take Watch
-    type: special
-    text: >
-      When you’re on watch and something approaches the camp roll+Wis.
-      * On a 10+, you’re able to wake the camp and prepare a response, everyone in the camp takes +1 forward.
-      * On a 7–9, you react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
-      * On a miss, whatever lurks outside the campfire’s light has the drop on you.
-    trigger: When you’re on watch and something approaches the camp
-    procedure:
-        roll roll+Wis:
-          success:
-            - You’re able to wake the camp and prepare a response
-            - modify all +1 forward
-          partial success: You react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
-          miss: Whatever lurks outside the campfire’s light has the drop on you.
-  - name: Undertake a Perilous Journey
-    type: special
-    text: >
-      When you travel through hostile territory, choose one member of the party to act as trailblazer, one to scout ahead, and one to be quartermaster. Each character with a job to do rolls+Wis.
-      * On a 10+:
-        * the quartermaster reduces the number of rations required by one
-        * the trailblazer reduces the amount of time it takes to reach your destination (the GM will say by how much)
-        * the scout will spot any trouble quick enough to let you get the drop on it
-      * On a 7–9, each role performs their job as expected: the normal number of rations are consumed, the journey takes about as long as expected, no one gets the drop on you but you don’t get the drop on them either.
-
-      You can’t assign more than one job to a character. If you don’t have enough party members, or choose not to assign a job, treat that job as if it had been assigned and the responsible player had rolled a 6.
-    trigger: When you travel through hostile territory
-    procedure:
-        choose What is your role in this journey?:
-          Quartermaster:
-            roll roll+Wis:
-              success: You reduce the number of rations required by one.
-              partial success: The normal number of rations are consumed.
-          Trailblazer:
-            roll roll+Wis:
-              success: You reduce the amount of time it takes to reach your destination (the GM will say by how much).
-              partial success: The journey takes about as long as expected.
-          Scout:
-            roll roll+Wis:
-              success: You will spot any trouble quick enough to let you get the drop on it.
-              partial success: No one gets the drop on you but you don’t get the drop on them either.
-  - name: End Of Session
-    type: special
-    text: >
-      When you reach the end of a session, choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.
-
-      Once bonds have been updated look at your alignment. If you fulfilled that alignment at least once this session, mark XP. Then answer these three questions as a group:
-      * Did we learn something new and important about the world?
-      * Did we overcome a notable monster or enemy?
-      * Did we loot a memorable treasure?
-      For each “yes” answer everyone marks XP.
-    trigger: When you reach the end of a session
-    procedure:
-        - choose Choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.:
-              Resolve a bond:
-                - resolve bond
-                - change xp by 1
-                - create bond
-              Create a new bond: create bond
-              Do not resolve a bond: do nothing
-        - is alignment met:
-            yes: change xp by 1
-            no: do nothing
-        - choose Did we learn something new and important about the world?:
-            yes: change xp by 1
-            no: do nothing
-        - choose Did we overcome a notable monster or enemy?:
-            yes: change xp by 1
-            no: do nothing
-        - choose Did we loot a memorable treasure?:
-            yes: change xp by 1
-            no: do nothing
-  - name: Level Up
-    type: special
-    text: >
-      When you have downtime (hours or days) and XP equal to (or greater than) your current level+7, you can reflect on your experiences and hone your skills.
-      * Subtract your current level+7 from your XP.
-      * Increase your level by 1.
-      * Choose a new advanced move from your class.
-      * If you are the wizard, you also get to add a new spell to your spellbook.
-      * Choose one of your stats and increase it by 1 (this may change your modifier). Changing your Constitution increases your maximum and current HP. Ability scores can’t go higher than 18.
-    trigger: When you have downtime (hours or days) and XP equal to (or greater than) your current level+7
-    procedure:
-      - change xp by (-1*level)-7
-      - change level by 1
-      - add advanced move
-      - choose Choose one of your stats to increase:
-          Strength: change Strength by 1
-          Dexterity: change Dexterity by 1
-          Constitution: change Constitution by 1
-          Intelligence: change Intelligence by 1
-          Wisdom: change Wisdom by 1
-          Charisma: change Charisma by 1
-  - name: Carouse
-    type: special
-    text: >
-      When you return triumphant and throw a big party, spend 100 coins and roll +1 for every extra 100 coins spent.
-      * On a 10+, choose 3.
-      * On a 7–9, choose 1.
-      * On a miss, you still choose one, but things get really out of hand (the GM will say how).
-
-      * You befriend a useful NPC.
-      * You hear rumors of an opportunity.
-      * You gain useful information.
-      * You are not entangled, ensorcelled, or tricked.
-    trigger: When you return triumphant and throw a big party
-    procedure:
-    - choose How much do you spend?:
-        100 coins (roll+0): use gear 100 coin
-        200 coins (roll+1): [use gear 200 coin, modify all +1 forced forward]
-        300 coins (roll+2): [use gear 300 coin, modify all +2 forced forward]
-        400 coins (roll+3): [use gear 400 coin, modify all +3 forced forward]
-    - roll roll:
-        success: choose 3
-        partial success: choose 1
-        miss: [choose 1, Things get really out of hand (the GM will say how).]
-        use:
-          - You befriend a useful NPC.
-          - You hear rumors of an opportunity.
-          - You gain useful information.
-          - You are not entangled, ensorcelled, or tricked.
-  - name: Supply
-    type: special
-    text: >
-      When you go to buy something with gold on hand, if it’s something readily available in the settlement you’re in, you can buy it at market price.
-      If it’s something special, beyond what’s usually available here, or non-mundane, roll+Cha.
-      * On a 10+, you find what you’re looking for at a fair price.
-      * On a 7–9, you’ll have to pay more or settle for something that’s not exactly what you wanted, but close. The GM will tell you what your options are.
-    trigger: When you go to buy something with gold on hand
-    procedure:
-      choose Is it something readily available in the settlement you’re in?:
-        yes: You can buy it in market price
-        no:
-          roll roll+Cha:
-            success: You find what you’re looking for at a fair price.
-            partial success: You’ll have to pay more or settle for something that’s not exactly what you wanted, but close. The GM will tell you what your options are.
-  - name: Recover
-    type: special
-    text: >
-      When you do nothing but rest in comfort and safety after a day of rest you recover all your HP.
-      After three days of rest you remove one debility of your choice.
-      If you’re under the care of a healer (magical or otherwise) you heal a debility for every two days of rest instead.
-    trigger: When you do nothing but rest in comfort and safety
-    procedure:
-      choose How long do you rest?:
-        One day - recover all your HP: change hp by maxHP
-        Three days, or two days with a healer - also remove a debility:
-          - change hp by maxHP
-          - choose Choose a debility to remove:
-              Weak: set Weak false
-              Shakey: set Shakey false
-              Sick: set Sick false
-              Stunned: set Stunned false
-              Confused: set Confused false
-              Scarred: set Scarred false
-  - name: Recruit
-    type: special
-    text: >
-      When you put out word that you’re looking to hire help, roll:
-      * +1 if you make it known that your pay is generous
-      * +1 if you make it known what you’re setting out to do
-      * +1 if you make it known that they’ll get a share of whatever you find
-      * +1 if you have a useful reputation around these parts
-
-      * On a 10+, you’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
-      * On a 7–9, you’ll have to settle for someone close to what you want or turn them away.
-      * On a miss someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
-    trigger: When you put out word that you’re looking to hire help
-    procedure:
-      - choose Do you make it known that your pay is generous?: { yes: modify all +1 forced forward, no: do nothing }
-      - choose Do you make it known what you’re setting out to do?: { yes: modify all +1 forced forward, no: do nothing }
-      - choose Do you make it known that they’ll get a share of whatever you find?: { yes: modify all +1 forced forward, no: do nothing }
-      - choose Do you have a useful reputation around these parts?: { yes: modify all +1 forced forward, no: do nothing }
-      - roll roll:
-          success: You’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
-          partial success: You’ll have to settle for someone close to what you want or turn them away.
-          miss:
-            - Someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
-            - choose Bring them along or turn them away?:
-                Bring them along: Bring them along
-                Turn them away: modify recruit -1 forced forward
-  - name: Outstanding Warrants
-    type: special
-    text: >
-      When you return to a civilized place in which you’ve caused trouble before, roll+Cha.
-      * On a 10+, word has spread of your deeds and everyone recognizes you.
-      * On a 7–9, as above, and the GM chooses a complication:
-        * The local constabulary has a warrant out for your arrest.
-        * Someone has put a price on your head.
-        * Someone important to you has been put in a bad spot as a result of your actions.
-    trigger: When you return to a civilized place in which you’ve caused trouble before
-    procedure:
-      roll roll+Cha:
-        success: Word has spread of your deeds and everyone recognizes you.
-        partial success:
-          - Word has spread of your deeds and everyone recognizes you.
-          - "The GM chooses a complication: the local constabulary has a warrant out for your arrest, someone has put a price on your head or someone important to you has been put in a bad spot as a result of your actions."
-  - name: Bolster
-    type: special
-    text: >
-      When you spend your leisure time in study, meditation, or hard practice, you gain preparation.
-      * If you prepare for a week or more, take 1 preparation.
-      * If you prepare for a month or longer, take 3 instead.
-      When your preparation pays off spend 1 preparation for +1 to any roll. You can only spend one preparation per roll.
-    trigger: When you spend your leisure time in study, meditation, or hard practice
-    procedure:
-      choose If you prepare for:
-        Between a week and a month: hold 3
-        More then a month: hold 1
-      use: modify all +1 forward
-tags:
-  - tag: Applied
-    text: It’s only useful when carefully applied to a person or to something they eat or drink.
-  - tag: Touch
-    text: It’s used by touching it to the target’s skin.
-  - tag: Awkward
-    text: It’s unwieldy and tough to use.
-  - tag: Dangerous
-    text: It’s easy to get in trouble with it. If you interact with it without proper precautions the GM may freely invoke the consequences of your foolish actions.
-  - tag: Ration
-    text: It’s edible, more or less.
-  - tag: Requires <something>
-    text: It’s only useful to certain people. If you don’t meet the requirements it works poorly, if at all.
-  - tag: Slow
-    text: It takes minutes or more to use.
-  - tag: Two-handed
-    text: It takes two hands to use it effectively.
-  - tag: Worn
-    text: To use it, you have to be wearing it.
-  - tag: <number> <trigger>
-    text: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
-    procedure: modify <trigger> number
-  - tag: <number> uses
-    text: It can only be used n times.
-    procedure:
-      - subtract 1 from uses
-      - is uses<0:
-          yes: remove this from gear
-  - tag: use twice
-    text: Use two every time.
-    procedure:
-      - subtract 1 from uses
-      - is uses<0:
-          yes: remove this from gear
-  - tag: <number> ammo
-    text: It counts as ammunition for appropriate ranged weapons. The number indicated does not represent individual arrows or sling stones, but represents what you have left on hand.
-    procedure:
-      is ammo=0:
-        yes: remove this from gear
-  - tag: Forceful
-    text: It can knock someone back a pace, maybe even off their feet.
-  - tag: <number> damage
-    text: It is particularly harmful to your enemies. When you deal damage, you add n to it.
-    procedure: modify once damage number
-  - tag: Ignores Armor
-    text: Don’t subtract armor from the damage taken.
-    procedure: show "Ignores armor" with "deal damage"
-  - tag: Messy
-    text: It does damage in a particularly destructive way, ripping people and things apart.
-  - tag: <number> piercing
-    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: show number piercing with "deal damage"
-  - tag: Precise
-    text: It rewards careful strikes. You use DEX to hack and slash with this weapon, not STR.
-    procedure: modify Hack and Slash roll+Str = roll+Dex
-  - tag: Reload
-    text: After you attack with it, it takes more than a moment to reset for another attack.
-  - tag: Stun
-    text: When you attack with it, it does stun damage instead of normal damage.
-  - tag: Thrown
-    text: Throw it at someone to hurt them. If you volley with this weapon, you can’t choose to mark off ammo on a 7–9; once you throw it, it’s gone until you can recover it.
-  - tag: Hand
-    text: It’s useful for attacking something within your reach, no further.
-  - tag: Close
-    text: It’s useful for attacking something at arm’s reach plus a foot or two.
-  - tag: Reach
-    text: It’s useful for attacking something that’s several feet away—maybe as far as ten.
-  - tag: Near
-    text: It’s useful for attacking if you can see the whites of their eyes.
-  - tag: Far
-    text: It’s useful for attacking something in shouting distance.
-  - tag: <number> armor
-    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack. It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: modify armor = number
-  - tag: <number> armor
-    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: take +number ongoing to armor
-  - tag: Clumsy
-    text: It’s tough to move around with. -1 ongoing while using it. This penalty is cumulative.
-    procedure: take -1 ongoing to all
-  - tag: On use <procedure>
-    procedure: <procedure>
-equipment:
-  - &coin name: coin
-    tags: []
-    cost: 1
-    weight: 0
-  - &Ragged_Bow name: Ragged Bow
-    tags: [Near]
-    cost: 15
-    weight: 2
-  - &Fine_Bow name: Fine Bow
-    tags: [Near, Far]
-    cost: 60
-    weight: 2
-  - &Hunters_Bow name: Hunter's Bow
-    tags: [Near, Far]
-    cost: 100
-    weight: 1
-  - &Crossbow name: Crossbow
-    tags: [Near, +1 damage, reload]
-    cost: 35
-    weight: 3
-  - &Bundle_of_Arrows name: Bundle of Arrows
-    tags: [3 ammo]
-    cost: 1
-    weight: 1
-  - &Elven_Arrows name: Elven Arrows
-    tags: [4 ammo]
-    cost: 1
-    weight: 1
-  - &Club name: Club
-    tags: [Close]
-    cost: 1
-    weight: 2
-  - &Shillelagh name: Shillelagh
-    tags: [Close]
-    cost: 1
-    weight: 2
-  - &Staff name: Staff
-    tags: [Close, Two-handed]
-    cost: 1
-    weight: 1
-  - &Dagger name: Dagger
-    tags: [Hand]
-    cost: 2
-    weight: 1
-  - &Shiv name: Shiv
-    tags: [Hand]
-    cost: 2
-    weight: 1
-  - &Knife name: Knife
-    tags: [Hand]
-    cost: 2
-    weight: 1
-  - &Throwing_Dagger name: Throwing Dagger
-    tags: [Thrown, Near]
-    cost: 1
-    weight: 1
-  - &Short_Sword name: Short Sword
-    tags: [Close]
-    cost: 8
-    weight: 1
-  - &Axe name: Axe
-    tags: [Close]
-    cost: 8
-    weight: 1
-  - &Warhammer name: Warhammer
-    tags: [Close]
-    cost: 8
-    weight: 1
-  - &Mace name: Mace
-    tags: [Close]
-    cost: 8
-    weight: 1
-  - &Spear name: Spear
-    tags: [Reach, Thrown, Near]
-    cost: 5
-    weight: 1
-  - &Long_Sword name: Long Sword
-    tags: [Close, +1 damage]
-    cost: 15
-    weight: 2
-  - &Battle_Axe name: Battle Axe
-    tags: [Close, +1 damage]
-    cost: 15
-    weight: 2
-  - &Flail name: Flail
-    tags: [Close, +1 damage]
-    cost: 15
-    weight: 2
-  - &Halberd name: Halberd
-    tags: [Reach, +1 damage, Two-handed]
-    cost: 9
-    weight: 2
-  - &Rapier name: Rapier
-    tags: [Close, Percise]
-    cost: 25
-    weight: 1
-  - &Dueling_Rapier name: Dueling Rapier
-    tags: [Close, 1 piercing, Percise]
-    cost: 50
-    weight: 2
-  - &Leather_Armor name: Leather Armor
-    tags: [1 armor, worn]
-    cost: 10
-    weight: 1
-  - &Chainmail name: Chainmail
-    tags: [1 armor, worn]
-    cost: 10
-    weight: 1
-  - &Scale_Mail name: Scale Mail
-    tags: [2 armor, worn, clumsy]
-    cost: 50
-    weight: 3
-  - &Plate_armor name: Plate armor
-    tags: [3 armor, worn, clumsy]
-    cost: 350
-    weight: 4
-  - &Shield name: Shield
-    tags: [+1 armor]
-    cost: 15
-    weight: 2
-  - &Adventuring_Gear name: Adventuring Gear
-    tags: [5 uses]
-    cost: 20
-    weight: 1
-    description: Adventuring gear is a collection of useful mundane items such as chalk, poles, spikes, ropes, etc. When you rummage through your adventuring gear for some useful mundane item, you find what you need and mark off a use.
-  - &Bandages name: Bandages
-    tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: do nothing }]
-    cost: 5
-    weight: 0
-    description: When you have a few minutes to bandage someone else’s wounds, heal them of 4 damage and expend a use.
-  - &Poultices_and_Herbs name: Poultices and Herbs
-    tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: do nothing }]
-    cost: 10
-    weight: 1
-    description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
-  - &Healing_Potion name: Healing Potion
-    tags:
-      - 1 uses
-      - On use choose are you healing yourself:
-          yes:
-            choose are you removeing a debility or healing yourself:
-              removeing a debility: remove a debility
-              healing yourself: heal 10
-          no: do nothing
-    cost: 50
-    weight: 0
-    description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
-  - &Keg_of_Dwarven_Stout name: Keg of Dwarven Stout
-    tags: [1 uses, On use take +1 forward on Carouse]
-    cost: 10
-    weight: 4
-    description: When you open a keg of dwarven stout and let everyone drink freely, take +1 to your Carouse roll. If you drink a whole keg yourself, you are very, very drunk.
-  - &Bag_of_Books name: Bag of Books
-    tags: [5 uses, On use take +1 forward on Spout Lore]
-    cost: 10
-    weight: 2
-    description: When your bag of books contains just the right book for the subject you’re spouting lore on, consult the book, mark off a use, and take +1 to your roll.
-  - &Antitoxin name: Antitoxin
-    tags: [1 uses]
-    cost: 10
-    weight: 0
-    description: When you drink antitoxin, you’re cured of one poison affecting you.
-  - &Dungeon_Rations name: Dungeon Rations
-    tags: [Ration, 5 use]
-    cost: 3
-    weight: 1
-    description: Not tasty, but not bad either.
-  - &Personal_Feast name: Personal Feast
-    tags: [Ration, 1 use]
-    cost: 10
-    weight: 1
-    description: Ostentatious to say the least.
-  - &Dwarven_Hardtack name: Dwarven Hardtack
-    tags: [Requires Dwarf, Ration, 7 uses]
-    cost: 3
-    weight: 1
-    description: Dwarves say it tastes like home. Everyone else says it tastes like home, if home is a hog farm, and on fire.
-  - &Elven_Bread name: Elven Bread
-    tags: [Ration, 7 uses]
-    cost: 10
-    weight: 1
-    description: Only the greatest of elf-friends are treated to this rare delicacy.
-  - &Halfling_Pipeleaf name: Halfling Pipeleaf
-    tags: [6 uses, use twice, On use take +1 forward to Parley]
-    cost: 5
-    weight: 0
-    description: When you share halfling pipeleaf with someone, expend two uses and take +1 forward to parley with them.
-  - &Oil_of_Tagit name: Oil of Tagit
-    tags: [Dangerous, Applied, 3 uses]
-    cost: 15
-    weight: 0
-    description: The target falls into a light sleep.
-  - &Bloodweed name: Bloodweed
-    tags: [Dangerous, Touch, 3 uses]
-    cost: 12
-    weight: 0
-    description: Until cured, whenever the afflicted rolls damage, they roll an additional d4 and subtract that result from their normal damage.
-  - &Goldenroot name: Goldenroot
-    tags: [Dangerous, Applied, 3 uses]
-    cost: 20
-    weight: 0
-    description: The target treats the next creature they see as a trusted ally, until proved otherwise.
-  - &Serpents_Tears name: Serpent’s Tears
-    tags: [Dangerous, Applied, 3 uses]
-    cost: 10
-    weight: 0
-    description: Anyone dealing damage against the target rolls twice and takes the better result.
-all techniques:
-  - name: Flowing
-    text: If your attack kills a target, you may immediately attack a new target as if you had gotten a 7-9 on the move you initially used.
-    before: do nothing
-    after:
-      choose did your attack killed the target?:
-        no: do nothing
-        yes:
-          choose do you want to immediately attack a new target as if you had gotten a 7-9 on the move you initially used?:
-            no: do nothing
-            # This can only happen with melee attack, so this would act like Hack and Slash 
-            yes: [deal damage, take damage]
-  - name: Freezing
-    text: Your attack freezes and shatters a portion of your opponent’s armor. After you deal your damage, reduce their armor by 1 until they repair it.
-    before: do nothing
-    after: do nothing
-  - name: Galvanic
-    text: Electricity courses through your blade, numbing one of your target’s limbs.
-    before: do nothing
-    after: do nothing
-  - name: Void-Edged
-    text: The edge of your weapon hums with an unearthly light. You may slice through inanimate objects with ease and add the ‘messy’ tag to your attack.
-    before: do nothing
-    after: do nothing
-  - name: Mirage
-    text: You create illusions of yourself that strike additional enemies near your target. Illusions deal your damage but do not apply any techniques.
-    before: do nothing
-    after: deal damage
-  - name: Tethering
-    text: Your attack pins your target’s shadow to the ground, preventing them from moving more than a few feet from their current location.
-    before: do nothing
-    after: do nothing
-  - name: Elaborate
-    text: >
-      When you apply this technique, roll+dex.
-        * On a 10+, deal an additional 1d8 damage.
-        * On a 7-9, this technique has do nothing, but it looks really cool!
-        * On a miss, your showboating costs you in some substantial way – the GM will tell you how.
-    before:
-      roll roll+dex:
-        success: take +1d8 forward to damage
-        partial success: this technique has do nothing, but it looks really cool!
-        miss: your showboating costs you in some substantial way – the GM will tell you how.
-    after: do nothing
-  - name: Earthshaker
-    text: Your attack concludes with an eruption of stone and earth from the ground, launching your target into the air.
-    before: do nothing
-    after: do nothing
-  - name: Burning
-    text: Your attack deals an extra 1d4 damage and lights anything flammable.
-    before: take +1d4 forward to damage
-    after: anything flammable is lit up
-  - name: Soul-Siphoning
-    text: Your attack heals you for 1d4. Heal 1d8 instead if this attack kills your target.
-    before: do nothing
-    after:
-      choose did the attack kill the target?:
-        yes: heal 1d8
-        no: heal 1d4
-  - name: Torrential
-    text: Your attack ends with a flurry of strikes that your opponent must dedicate effort to blocking or avoiding. If they instead attack you in response to your attack, deal your damage again (this does not apply techniques).
-    before: do nothing
-    after:
-      choose did your opponent attack you?:
-        yes: deal damage
-        no: do nothing
-  - name: Burst
-    text: Your attack deals an additional 1d4 damage and gains the ‘forceful’ tag.
-    before: take +1d4 forward to damage
-    after: do nothing
-  - name: Quicksilver
-    text: Your blade cuts faster than the eye can see, preventing your opponent from mounting a proper defense. Gain 2 piercing on your attack.
-    before: take +2 forward to piercing
-    after: do nothing
-  - name: Warding
-    text: Your attack creates a ring of light around you and your target that other creatures (and their projectiles) cannot cross.
-    before: do nothing
-    after: do nothing
-  - name: Dust Devil
-    text: Your attack kicks up a small tornado of dust and grit at your target’s feet, obscuring visibility.
-    before: do nothing
-    after: do nothing
-cleric spells:
-  - name: Light
-    level: 0
-    ongoing: false
-    text: An item you touch glows with divine light, about as bright as a torch. It gives off no heat or sound and requires no fuel but is otherwise like a mundane torch. You have complete control of the color of the flame. The spell lasts as long as it is in your presence.
-  - name: Sanctify
-    level: 0
-    ongoing: false
-    text: Food or water you hold in your hands while you cast this spell is consecrated by your deity. In addition to now being holy or unholy, the affected substance is purified of any mundane spoilage.
-  - name: Guidance
-    level: 0
-    ongoing: false
-    text: The symbol of your deity appears before you and gestures towards the direction or course of action your deity would have you take then disappears. The message is through gesture only; your communication through this spell is severely limited.
-  - name: Bless
-    level: 1
-    ongoing: true
-    text: Your deity smiles upon a combatant of your choice. They take +1 ongoing so long as battle continues and they stand and fight. While this spell is ongoing you take -1 to cast a spell.
-  - name: Cure Light Wounds
-    level: 1
-    ongoing: false
-    text: At your touch wounds scab and bones cease to ache. Heal an ally you touch of 1d8 damage.
-  - name: Detect Alignment
-    level: 1
-    ongoing: false
-    text: >
-      When you cast this spell choose an alignment: Good, Evil, Lawful, or Chaotic. One of your senses is briefly able to detect that alignment. The GM will tell you what here is of that alignment.
-  - name: Cause Fear
-    level: 1
-    ongoing: true
-    text: >
-      Choose a target you can see and a nearby object.
-      The target is afraid of the object so long as you maintain the spell.
-      Their reaction is up to them: flee, panic, beg, fight.
-      While this spell is ongoing you take -1 to cast a spell.
-      You cannot target entities with less than animal intelligence (magical constructs, undead, automatons, and the like).
-  - name: Magic Weapon
-    level: 1
-    ongoing: true
-    text: The weapon you hold while casting does +1d4 damage until you dismiss this spell. While this spell is ongoing you take -1 to cast a spell.
-  - name: Sanctuary
-    level: 1
-    ongoing: false
-    text: As you cast this spell, you walk the perimeter of an area, consecrating it to your deity. As long as you stay within that area you are alerted whenever someone acts with malice within the sanctuary (including entering with harmful intent). Anyone who receives healing within a sanctuary heals +1d4 HP.
-  - name: Speak With Dead
-    level: 1
-    ongoing: false
-    text: A corpse converses with you briefly. It will answer any three questions you pose to it to the best of the knowledge it had in life and the knowledge it gained in death.
-  - name: Animate Dead
-    level: 3
-    ongoing: true
-    text: >
-      You invoke a hungry spirit to possess a recently-dead body and serve you. This creates a zombie that follows your orders to the best of its limited abilities. Treat the zombie as a character, but with access to only the basic moves. It has a +1 modifier for all stats and 1 HP. The zombie also gets your choice of 1d4 of these traits:
-        * It’s talented. Give one stat a +2 modifier.
-        * It’s durable. It has +2 HP for each level you have.
-        * It has a functioning brain and can complete complex tasks.
-        * It does not appear obviously dead, at least for a day or two.
-      The zombie lasts until it is destroyed by taking damage in excess of its HP, or until you end the spell. While this spell is ongoing you take -1 to cast a spell.
-  - name: Cure Moderate Wounds
-    level: 3
-    ongoing: false
-    text: You staunch bleeding and set bones through magic. Heal an ally you touch of 2d8 damage.
-  - name: Darkness
-    level: 3
-    ongoing: true
-    text: >
-      Choose an area you can see: it’s filled with supernatural darkness and shadow. While this spell is ongoing you take -1 to cast a spell.
-  - name: Resurrection
-    level: 3
-    ongoing: false
-    text: >
-      Tell the GM you would like to resurrect a corpse whose soul has not yet fully departed this world. Resurrection is always possible, but the GM will give you one or more (possibly all) of these conditions to fulfill:
-          * It’s going to take days/weeks/months
-          * You must get help from
-          * It will require a lot of money
-          * You must sacrifice to do it
-      The GM may, depending on the circumstances, allow you to resurrect the corpse now, with the understanding that the conditions must be met before it’s permanent, or require you to meet the conditions before the corpse is resurrected.
-  - name: Hold Person
-    level: 3
-    ongoing: false
-    text: Choose a person you can see. Until you cast a spell or leave their presence they cannot act except to speak. This effect ends immediately if the target takes damage from any source.
-  - name: Cure Critical Wounds
-    level: 5
-    ongoing: false
-    text: Heal an ally you touch of 3d8 damage
-  - name: Divination
-    level: 5
-    ongoing: false
-    text: Name a person, place, or thing you want to learn about. Your deity grants you visions of the target, as clear as if you were there.
-  - name: Contagion
-    level: 5
-    ongoing: true
-    text: Choose a creature you can see. Until you end this spell, the target suffers from a disease of your choice. While this spell is ongoing you take -1 to cast a spell.
-  - name: Words of the Unspeaking
-    level: 5
-    ongoing: false
-    text: With a touch you speak to the spirits within things. The non-living object you touch answers three questions you pose, as best it can.
-  - name: True Seeing
-    level: 5
-    ongoing: true
-    text: Your vision is opened to the true nature of everything you lay your eyes on. You pierce illusions and see things that have been hidden. The GM will describe the area before you ignoring any illusions and falsehoods, magical or otherwise. While this spell is ongoing you take -1 to cast a spell.
-  - name: Trap Soul
-    level: 5
-    ongoing: false
-    text: You trap the soul of a dying creature within a gem. The trapped creature is aware of its imprisonment but can still be manipulated through spells, parley, and other effects. All moves against the trapped creature are at +1. You can free the soul at any time but it can never be recaptured once freed.
-  - name: Word of Recall
-    level: 7
-    ongoing: false
-    text: Choose a word. The first time after casting this spell that you speak the chosen word, you and any allies touching you when you cast the spell are immediately returned to the exact spot where you cast the spell. You can only maintain a single location; casting Word of Recall again before speaking the word replaces the earlier spell.
-  - name: Heal
-    level: 7
-    ongoing: false
-    text: Touch an ally and you may heal their damage a number of points up to your maximum HP.
-  - name: Harm
-    level: 7
-    ongoing: false
-    text: Touch an enemy and strike them with divine wrath—deal 2d8 damage to them and 1d6 damage to yourself. This damage ignores armor.
-  - name: Sever
-    level: 7
-    ongoing: true
-    text: Choose an appendage on the target such as an arm, tentacle, or wing. The appendage is magically severed from their body, causing no damage but considerable pain. Missing an appendage may, for example, keep a winged creature from flying, or a bull from goring you on its horns. While this spell is ongoing you take -1 to cast a spell.
-  - name: Mark of Death
-    level: 7
-    ongoing: false
-    text: Choose a creature whose true name you know. This spell creates permanent runes on a target surface that will kill that creature, should they read them.
-  - name: Control Weather
-    level: 7
-    ongoing: false
-    text: Pray for rain—or sun, wind, or snow. Within a day or so, your god will answer. The weather will change according to your will and last a handful of days.
-  - name: Storm of Vengeance
-    level: 9
-    ongoing: false
-    text: >
-      Your deity brings the unnatural weather of your choice to pass. Rain of blood or acid, clouds of souls, wind that can carry away buildings, or any other weather you can imagine: ask and it shall come.
-  - name: Repair
-    level: 9
-    ongoing: false
-    text: Choose one event in the target’s past. All effects of that event, including damage, poison, disease, and magical effects, are ended and repaired. HP and diseases are healed, poisons are neutralized, magical effects are ended.
-  - name: Divine Presence
-    level: 9
-    ongoing: true
-    text: Every creature must ask your leave to enter your presence, and you must give permission aloud for them to enter. Any creature without your leave takes an extra 1d10 damage whenever they take damage in your presence. While this spell is ongoing you take -1 to cast a spell.
-  - name: Consume Unlife
-    level: 9
-    ongoing: false
-    text: The mindless undead creature you touch is destroyed and you steal its death energy to heal yourself or the next ally you touch. The amount of damage healed is equal to the HP that the creature had remaining before you destroyed it.
-  - name: Plague
-    level: 9
-    ongoing: true
-    text: Name a city, town, encampment, or other place where people live. As long as this spell is active that place is beset by a plague appropriate to your deity’s domains (locusts, death of the first born, etc.) While this spell is ongoing you take -1 to cast a spell.
-wizard spells:
-  - name: Light
-    level: 0
-    ongoing: false
-    tags: []
-    text: An item you touch glows with arcane light, about as bright as a torch. It gives off no heat or sound and requires no fuel but it is otherwise like a mundane torch. You have complete control of the color of the flame. The spell lasts as long as it is in your presence.
-  - name: Unseen Servant
-    level: 0
-    ongoing: true
-    tags: []
-    text: You conjure a simple invisible construct that can do nothing but carry items. It has Load 3 and carries anything you hand to it. It cannot pick up items on its own and can only carry those you give to it. Items carried by an unseen servant appear to float in the air a few paces behind you. An unseen servant that takes damage or leaves your presence is immediately dispelled, dropping any items it carried. Otherwise the unseen servant serves you until you end the spell.
-  - name: Prestidigitation
-    level: 0
-    ongoing: false
-    tags: []
-    text: >
-      You perform minor tricks of true magic. If you touch an item as part of the casting you can make cosmetic changes to it: clean it, soil it, cool it, warm it, flavor it, or change its color. If you cast the spell without touching an item you can instead create minor illusions no bigger than yourself. Prestidigitation illusions are crude and clearly illusions—they won’t fool anyone, but they might entertain them.
-  - name: Contact Spirits
-    level: 1
-    ongoing: false
-    tags: [summoning]
-    text: Name the spirit you wish to contact (or leave it to the GM). You pull that creature through the planes, just close enough to speak to you. It is bound to answer any one question you ask to the best of its ability.
-  - name: Detect Magic
-    level: 1
-    ongoing: false
-    tags: [divination]
-    text: One of your senses is briefly attuned to magic. The GM will tell you what here is magical.
-  - name: Charm Person
-    level: 1
-    ongoing: true
-    tags: [enchantment]
-    text: The person (not beast or monster) you touch while casting this spell counts you as a friend until they take damage or you prove otherwise.
-  - name: Invisibility
-    level: 1
-    ongoing: true
-    tags: [illusion]
-    text: >
-      Touch an ally: nobody can see them. They’re invisible! The spell persists until the target attacks or you dismiss the effect. While the spell is ongoing you can’t cast a spell.
-  - name: Magic Missile
-    level: 1
-    ongoing: false
-    tags: [evocation]
-    text: Projectiles of pure magic spring from your fingers. Deal 2d4 damage to one target.
-  - name: Alarm
-    level: 1
-    ongoing: false
-    tags: []
-    text: Walk a wide circle as you cast this spell. Until you prepare spells again your magic will alert you if a creature crosses that circle. Even if you are asleep, the spell will shake you from your slumber.
-  - name: Dispel Magic
-    level: 3
-    ongoing: false
-    tags: []
-    text: >
-      Choose a spell or magic effect in your presence: this spell rips it apart. Lesser spells are ended, powerful magic is just reduced or dampened so long as you are nearby.
-  - name: Visions Through Time
-    level: 3
-    ongoing: false
-    tags: [divination]
-    text: Cast this spell and gaze into a reflective surface to see into the depths of time. The GM will reveal the details of a grim portent to you—a bleak event that will come to pass without your intervention. They’ll tell you something useful about how you can interfere with the grim portent’s dark outcomes. Rare is the portent that claims “You’ll live happily ever after.” Sorry.
-  - name: Fireball
-    level: 3
-    ongoing: false
-    tags: [evocation]
-    text: You evoke a mighty ball of flame that envelops your target and everyone nearby, inflicting 2d6 damage which ignores armor.
-  - name: Mimic
-    level: 3
-    ongoing: true
-    tags: []
-    text: You take the form of someone you touch while casting this spell. Your physical characteristics match theirs exactly but your behavior may not. This change persists until you take damage or choose to return to your own form. While this spell is ongoing you lose access to all your wizard moves.
-  - name: Mirror Image
-    level: 3
-    ongoing: false
-    tags: [illusion]
-    text: You create an illusory image of yourself. When you are attacked, roll a d6. On a 4, 5, or 6 the attack hits the illusion instead, the image then dissipates and the spell ends.
-  - name: Sleep
-    level: 3
-    ongoing: false
-    tags: [enchantment]
-    text: >
-      1d4 enemies you can see of the GM’s choice fall asleep. Only creatures capable of sleeping are affected. They awake as normal: loud noises, jolts, pain.
-  - name: Cage
-    level: 5
-    ongoing: true
-    tags: [evocation]
-    text: The target is held in a cage of magical force. Nothing can get in or out of the cage. The cage remains until you cast another spell or dismiss it. While the spell is ongoing, the caged creature can hear your thoughts and you cannot leave sight of the cage.
-  - name: Contact Other Plane
-    level: 5
-    ongoing: false
-    tags: [divination]
-    text: You send a request to another plane. Specify who or what you’d like to contact by location, type of creature, name, or title. You open a two-way communication with that creature. Your communication can be cut off at any time by you or the creature you contacted.
-  - name: Polymorph
-    level: 5
-    ongoing: false
-    tags: [enchantment]
-    text: >
-      Your touch reshapes a creature entirely, they stay in the form you craft until you cast a spell. Describe the new shape you craft, including any stat changes, significant adaptations, or major weaknesses. The GM will then tell you one or more of these:
-          * The form will be unstable and temporary
-          * The creature’s mind will be altered as well
-          * The form has an unintended benefit or weakness
-  - name: Summon Monste
-    level: 5
-    ongoing: true
-    tags: [summoning]
-    text: >
-      A monster appears and aids you as best it can. Treat it as your character, but with access to only the basic moves. It has +1 modifier for all stats, 1 HP, and uses your damage dice. The monster also gets your choice of 1d6 of these traits:
-        * It has +2 instead of +1 to one stat
-        * It’s not reckless
-        * It does 1d8 damage
-        * Its bond to your plane is strong: +2 HP for each level you have
-        * It has some useful adaptation
-      The GM will tell you the type of monster you get based on the traits you select. The creature remains on this plane until it dies or you dismiss it. While the spell is ongoing you take -1 to cast a spell.
-  - name: Dominate
-    level: 7
-    ongoing: true
-    tags: [enchantment]
-    text: >
-      Your touch pushes your mind into someone else’s. You gain 1d4 hold. Spend one hold to make the target take one of these actions:
-
-        * Speak a few words of your choice
-        * Give you something they hold
-        * Make a concerted attack on a target of your choice
-        * Truthfully answer one question
-      If you run out of hold the spell ends. If the target takes damage you lose 1 hold. While the spell is ongoing you cannot cast a spell.
-  - name: True Seeing
-    level: 7
-    ongoing: true
-    tags: [divination]
-    text: You see all things as they truly are. This effect persists until you tell a lie or dismiss the spell. While this spell is ongoing you take -1 to cast a spell.
-  - name: Shadow Walk
-    level: 7
-    ongoing: false
-    tags: [illusion]
-    text: The shadows you target with this spell become a portal for you and your allies. Name a location, describing it with a number of words up to your level. Stepping through the portal deposits you and any allies present when you cast the spell at the location you described. The portal may only be used once by each ally.
-  - name: Contingency
-    level: 7
-    ongoing: false
-    tags: [evocation]
-    text: Choose a 5th level or lower spell you know. Describe a trigger condition using a number of words equal to your level. The chosen spell is held until you choose to unleash it or the trigger condition is met, whichever happens first. You don’t have to roll for the held spell, it just takes effect. You may only have a single contingent spell held at a time; if you cast Contingency while you have a held spell, the new held spell replaces the old one.
-  - name: Cloudkill
-    level: 7
-    ongoing: true
-    tags: [summoning]
-    text: A cloud of fog drifts into this realm from beyond the Black Gates of Death, filling the immediate area. Whenever a creature in the area takes damage it takes an additional, separate 1d6 damage which ignores armor. This spell persists so long as you can see the affected area, or until you dismiss it.
-  - name: Antipathy
-    level: 7
-    ongoing: true
-    tags: [enchantment]
-    text: Choose a target and describe a type of creature or an alignment. Creatures of the specified type or alignment cannot come within sight of the target. If a creature of the specified type does find itself within sight of the target, it immediately flees. This effect continues until you leave the target’s presence or you dismiss the spell. While the spell is ongoing you take -1 to cast a spell.
-  - name: Alert
-    level: 9
-    ongoing: false
-    tags: [divination]
-    text: Describe an event. The GM will tell you when that event occurs, no matter where you are or how far away the event is. If you choose, you can view the location of the event as though you were there in person. You can only have one Alert active at a time.
-  - name: Soul Gem
-    level: 9
-    ongoing: false
-    tags: []
-    text: You trap the soul of a dying creature within a gem. The trapped creature is aware of its imprisonment but can still be manipulated through spells, parley, and other effects. All moves against the trapped creature are at +1. You can free the soul at any time but it can never be recaptured once freed.
-  - name: Shelter
-    level: 9
-    ongoing: true
-    tags: [evocation]
-    text: You create a structure out of pure magical power. It can be as large as a castle or as small as a hut, but is impervious to all non-magical damage. The structure endures until you leave it or you end the spell.
-  - name: Perfect Summons
-    level: 9
-    ongoing: false
-    tags: [summoning]
-    text: You teleport a creature to your presence. Name a creature or give a short description of a type of creature. If you named a creature, that creature appears before you. If you described a type of creature, a creature of that type appears before you.
