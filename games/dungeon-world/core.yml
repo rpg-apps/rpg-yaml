@@ -160,8 +160,8 @@ mechanisms: &mechanisms
     choices: &race-choices
       race: from race options
     character fields: &race-character-fields
-      race: start as race.name choice
-      race move: start as reace.move choice
+      race: start as race choice.name
+      race move: start as reace choice.move
     hooks:
       after character creation: add race choice.move to moves
   alignment: &alignment
@@ -200,8 +200,6 @@ mechanisms: &mechanisms
       gear: start as gear choice
       ignored tags: start as []
       weight: sum of (equipment.weight for equipment in gear)
-    formulas: &equipment-formulas
-      "regular <number=1> <text:name> (equipment array)": array of number equipment where equipment.name = name
     procedures: &equipment-procedures
       use <amount=1> tagged <tag>:
         for tag in (choice amount from (for equipment in gear where tag in equipment.tags)).tags:
@@ -261,10 +259,10 @@ playbooks:
       - - [{ name: Noble’s silks, weight: 0, cost: 0, tags: [] }, 10 coin]
         - [{ name: Duelist’s leathers, weight: 1, cost: 0, tags: [1 armor, worn] }]
       - - [{ name: Bastard Sword, weight: 2, cost: 0, tags: [+1 damage, two-handed, close] }]
-        - [regular Rapier]
-        - [regular Dagger, { name: Parrying Dagger, weight: 1, cost: 0, tags: [hand, +1 armor] }]
-      - - [regular Adventuring Gear, regular Dungeon Rations]
-        - [regular Healing Potion]
+        - [*Rapier]
+        - [*Dagger, { name: Parrying Dagger, weight: 1, cost: 0, tags: [hand, +1 armor] }]
+      - - [*Adventuring_Gear, *Dungeon_Rations]
+        - [*Healing_Potion]
     starting moves:
       - name: Arcane Bladework
         type: starting
@@ -581,9 +579,9 @@ playbooks:
               yes: add 1 to xp
               no: do nothing
     alignment options:
-      - alignemnt: chaotic
+      - alignment: chaotic
         goal: Eschew a convention of the civilized world.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Teach someone the ways of your people.
     bond options:
       - <char> is puny and foolish, but amusing to me.
@@ -592,12 +590,13 @@ playbooks:
       - <char> shares my hunger for glory; the earth will tremble at our passing!
     load: str+8
     starting gear options:
-      - - [regula Axe]
-        - [regular Two Handed Sword]
-      - - [regular Adventuring Gear, regular Dungeon Rations]
-        - [regular Chainmail]
-      - - [regular Dungeon Rations]
-      - - [regular Dagger]
+      - - [*Axe]
+          /TODO
+        - [{ name: Two Handed Sword, weight: 2, cost: 0, tags: [close, +1 damage] }]
+      - - [*Adventuring_Gear, *Dungeon_Rations]
+        - [*Chainmail]
+      - - [*Dungeon_Rations]
+      - - [*Dagger]
       - - [{ name: Some token of where you’ve traveled or where you’re from, weight: 0, cost: 0, tags: [] }]
     starting moves:
       Herculean Appetites:
@@ -884,11 +883,11 @@ playbooks:
           trigger: When you first enter a civilized settlement
           procedure: someone who respects the custom of hospitality to minstrels will take you in as their guest.
     alignment options:
-      - alignemnt: good
+      - alignment: good
         goal: Perform your art to aid someone else.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Avoid a conflict or defuse a tense situation.
-      - alignemnt: chaotic
+      - alignment: chaotic
         goal: Spur others to significant and unplanned decisive action.
     bond options:
       - This is not my first adventure with <char>.
@@ -899,21 +898,21 @@ playbooks:
       - <char> does not trust me, and for good reason.
     load: str+8
     starting gear options:
-      - - [regular Dungeon Rations]
-      - - [Your father’s mandolin, repaired]
-        - [A fine lute, a gift from a noble]
-        - [The pipes with which you courted your first love]
-        - [A stolen horn]
-        - [A fiddle, never before played]
-        - [A songbook in a forgotten tongue]
-      - - [regular Leather Armor]
-        - [{ name: Ostentatious clothes, weight: 0, cost: 0 }]
-      - - [reulgar Dueling Rapier]
-        - [regular Worn bow, regular Bundle of Arrows, regular Short Sword]
-      - - [regular Adventuring Gear]
-        - [regular Bandages]
-        - [regular Halfling Pipeleaf]
-        - [3 coin]
+      - - [*Dungeon_Rations]
+      - - [{ name: "Your father’s mandolin, repaired", weight: 1, cost: 0, tags: [] }]
+        - [{ name: "A fine lute, a gift from a noble", weight: 1, cost: 0, tags: [] }]
+        - [{ name: "The pipes with which you courted your first love", weight: 1, cost: 0, tags: [] }]
+        - [{ name: "A stolen horn", weight: 1, cost: 0, tags: [] }]
+        - [{ name: "A fiddle, never before played", weight: 1, cost: 0, tags: [] }]
+        - [{ name: "A songbook in a forgotten tongue", weight: 1, cost: 0, tags: [] }]
+      - - [*Leather_Armor]
+        - [{ name: Ostentatious clothes, weight: 0, cost: 0, tags: [] }]
+      - - [*Dueling_Rapier]
+        - [*Worn_Bow, *Bundle_of_Arrows, *Short_Swird]
+      - - [*Adventuring_Gear]
+        - [*Bandages]
+        - [*Halfling_Pipeleaf]
+        - [*coin, *coin, *coin]
     starting moves:
       - name: Arcane Art
         type: starting
@@ -1153,11 +1152,11 @@ playbooks:
           trigger: When you first enter a civilized settlement
           procedure: someone who respects the custom of hospitality to minstrels will take you in as their guest.
     alignment options:
-      - alignemnt: good
+      - alignment: good
         goal: Endanger yourself to heal another.
-      - alignemnt: lawful
+      - alignment: lawful
         goal: Endanger yourself following the precepts of your church or god.
-      - alignemnt: evil
+      - alignment: evil
         goal: Harm another to prove the superiority of your church or god.
     bond options:
       - <char> has insulted my deity; I do not trust them.
@@ -1166,13 +1165,13 @@ playbooks:
       - I am working on converting <char> to my faith.
     load: str+10
     starting gear options:
-      - - [regular Chainmail]
-        - [regular Shield]
-      - - [regular Warhammer]
-        - [regular Mace]
-        - [regular Staff, regular Bandages]
-      - - [regular Adventuring Gear, regular Dungeon Rations]
-        - [regular Healing Potion]
+      - - [*Chainmail]
+        - [*Shield]
+      - - [*Warhammer]
+        - [*Mace]
+        - [*Staff, *Bandages]
+      - - [*Adventuring_Gear, *Dungeon_Rations]
+        - [*Healing_Potion]
     starting moves:
       - name: Deity
         type: starting
@@ -1406,11 +1405,11 @@ playbooks:
         move:
           text: You sing the healing songs of spring and brook. When you make camp, you and your allies heal +1d6.
     alignment options:
-      - alignemnt: chaotic
+      - alignment: chaotic
         goal: Destroy a symbol of civilization.
-      - alignemnt: good
+      - alignment: good
         goal: Help something or someone grow.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Eliminate an unnatural menace.
     bond options:
       - <char> smells more like prey than a hunter.
@@ -1422,12 +1421,12 @@ playbooks:
       - - [{ name: Hide Armor, weight: 1, cost: 0, tags: [1 armor] }]
         - [{ name: Wooden Shield, weight: 1, cost: 0, tags: [+1 armor] }]
       - - [{ name: Shillelagh, weight: 1, cost: 0, tags: [close] }]
-        - [regular Staff]
-        - [regular Spear]
-      - - [regular Adventuring Gear]
-        - [regular Poultices and Herbs]
-        - [regular Halfling Pipeleaf]
-        - [regular 3 Antitoxin]
+        - [*Staff]
+        - [*Spear]
+      - - [*Adventuring_Gear]
+        - [*Poultices_and_Herbs]
+        - [*Halfling_Pipeleaf]
+        - [*Antitoxin, *Antitoxin, *Antitoxin]
     starting moves:
       - name: Born of the Soil
         type: starting
@@ -1571,11 +1570,11 @@ playbooks:
         move:
           text: Once per battle you may reroll a single damage roll (yours or someone else’s).
     alignment options:
-      - alignemnt: good
+      - alignment: good
         goal: Defend those weaker than you.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Defeat a worthy opponent.
-      - alignemnt: evil
+      - alignment: evil
         goal: Kill a defenseless or surrendered enemy.
     bond options:
       - <char> owes me their life, whether they admit it or not.
@@ -1584,13 +1583,13 @@ playbooks:
       - <char> is soft, but I will make them hard like me.
     load: str+12
     starting gear options:
-      - - [regular Dungeon Rations]
-      - - [regular Chainmail, regular Adventuring Gear]
-        - [regular Scale Mail]
-      - - [regular Healing Potion]
-        - [regular Shield]
-        - [regular Antitoxin, regular Dungeon Rations, regular Poultices and Herbs]
-        - [regular 22 coins]
+      - - [*Dungeon_Rations]
+      - - [*Chainmail, *Adventuring_Gear]
+        - [*Scale_Mail]
+      - - [*Healing_Potion]
+        - [*Shield]
+        - [*Antitoxin, *Dungeon_Rations, *Poultices_and_Herbs]
+        - [*coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin]
     starting moves:
       - name: Bend Bars, Lift Gates
         type: starting
@@ -1731,11 +1730,11 @@ playbooks:
         move:
           text: Non-magical heat and fire cannot harm you.
     alignment options:
-      - alignemnt: evil
+      - alignment: evil
         goal: Sacrifice an unwilling victim to the flames.
-      - alignemnt: chaotic
+      - alignment: chaotic
         goal: Spread a dangerous new idea.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Exchange a sacrifice, freely given, for a service rendered.
     bond options:
       - <char> has felt the hellish touch of fire, now they know my strength.
@@ -1744,11 +1743,11 @@ playbooks:
     load: str+9
     starting gear options:
       - - [{ name:  a symbol of your sacrifices past, weight: 0, cost: 0 }]
-      - - [regular Adventuring Gear]
-      - - [regular Healing Potion]
-      - - [regular Dungeon Rations]
-        - [regular Healing Potion]
-        - [regular 10 coin]
+      - - [*Adventuring_Gear]
+      - - [*Healing_Potion]
+      - - [*Dungeon_Rations]
+        - [*Healing_Potion]
+        - [*coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin]
     starting moves:
       - name: Burning Brand
         type: starting
@@ -1847,9 +1846,9 @@ playbooks:
         move:
           text: When you pray for guidance, even for a moment, and ask, “What here is evil?” the GM will tell you, honestly.
     alignment options:
-      - alignemnt: lawful
+      - alignment: lawful
         goal: Deny mercy to a criminal or unbeliever.
-      - alignemnt: good
+      - alignment: good
         goal: Endanger yourself to protect someone weaker than you.
     bond options:
       - <char>’s misguided behavior endangers their very soul!
@@ -1858,13 +1857,13 @@ playbooks:
       - <char> is a brave soul, I have much to learn from them.
     load: str+12
     starting gear options:
-      - - [regular Dungeon Rations]
-      - - [regular Scale Mail]
+      - - [*Dungeon_Rations]
+      - - [*Scale_Mail]
       - - [{ name: Mark of Faith, weight: 0, cost: 0 }]
-      - - [regular Halberd]
-        - [regular Long Sword]
-      - - [regular Adventuring Gear]
-        - [regular Dungeon Rations, regular Healing Potion]
+      - - [*Halberd]
+        - [*Long_Sword]
+      - - [*Adventuring_Gear]
+        - [*Dungeon_Rations, *Healing_Potion]
     starting moves:
       - name: Lay on Hands
         type: starting
@@ -2004,11 +2003,11 @@ playbooks:
         move:
           text: When you make camp in a dungeon or city, you don’t need to consume a ration.
     alignment options:
-      - alignemnt: chaotic
+      - alignment: chaotic
         goal: Free someone from literal or figurative bonds.
-      - alignemnt: good
+      - alignment: good
         goal: Endanger yourself to combat an unnatural threat.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Help an animal or spirit of the wild.
     bond options:
       - I have guided <char> before and they owe me for it.
@@ -2017,13 +2016,13 @@ playbooks:
       - <char> does not understand life in the wild, so I will teach them.
     load: str+11
     starting gear options:
-      - - [regular Dungeon Rations]
-      - - [regular Leather Armor]
-      - - [regular Bundle of Arrows]
-      - - [regular Hunter's Bow, regular Short Sword]
-        - [regular Hunter's Bow, regular Spear]
-      - - [regular Adventuring Gear, regular Dungeon Rations]
-        - [regular Adventuring Gear, regular Bundle of Arrows]
+      - - [*Dungeon_Rations]
+      - - [*Leather_Armor]
+      - - [*Bundle_of_Arrows]
+      - - [*Hunters_Bow, *Short_Swird]
+        - [*Hunters_Bow, *Spear]
+      - - [*Adventuring_Gear, *Dungeon_Rations]
+        - [*Adventuring_Gear, *Bundle_of_Arrows]
     starting moves:
       - name: Hunt and Track
         type: starting
@@ -2168,11 +2167,11 @@ playbooks:
         move:
           text: You are a professional. When you spout lore or discern realities about criminal activities, take +1.
     alignment options:
-      - alignemnt: chaotic
+      - alignment: chaotic
         goal: Leap into danger without a plan.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Avoid detection or infiltrate a location.
-      - alignemnt: evil
+      - alignment: evil
         goal: Shift danger or blame from yourself to someone else.
     bond options:
       - I stole something from <char>.
@@ -2181,15 +2180,15 @@ playbooks:
       - <char> and I have a con running.
     load: str+9
     starting gear options:
-      - - [regular Dungeon Rations]
-      - - [regular Leather Armor]
-      - - [regular 10 coin]
-      - - [regular Dagger, regular Short Sword]
-        - [regular Rapier]
-      - - [regular 3 Throwing Dagger]
-        - [regular Ragged Bow, regular Bundle of Arrows]
-      - - [regular Healing Potion]
-        - [regular Adventuring Gear]
+      - - [*Dungeon_Rations]
+      - - [*Leather_Armor]
+      - - [*coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin, *coin]
+      - - [*Dagger, *Short_Swird]
+        - [*Rapier]
+      - - [*Throwing_Dagger, *Throwing_Dagger, *Throwing_Dagger]
+        - [*Ragged_Bow, *Bundle_of_Arrows]
+      - - [*Healing_Potion]
+        - [*Adventuring_Gear]
     starting moves:
       - name: Trap Expert
         type: starting
@@ -2334,11 +2333,11 @@ playbooks:
         move:
           text: Choose one cleric spell. You can cast it as if it was a wizard spell.
     alignment options:
-      - alignemnt: good
+      - alignment: good
         goal: Use magic to directly aid another.
-      - alignemnt: neutral
+      - alignment: neutral
         goal: Discover something about a magical mystery.
-      - alignemnt: evil
+      - alignment: evil
         goal: Use magic to cause terror and fear.
     bond options:
       - <char> will play an important role in the events to come. I have foreseen it!
@@ -2346,13 +2345,13 @@ playbooks:
       - <char> is woefully misinformed about the world; I will teach them all that I can.
     load: str+7
     starting gear options:
-      - - [regular Dungeon Rations]
-      - - [regular Leather Armor]
-        - [regular Bag of Books, regular 3 Healing Potion]
-      - - [regular Dagger]
-        - [regular Staff]
-      - - [regular Healing Potion]
-        - [regular 3 Antitoxin]
+      - - [*Dungeon_Rations]
+      - - [*Leather_Armor]
+        - [*Bag_of_Books, *Healing_Potion, *Healing_Potion, *Healing_Potion]
+      - - [*Dagger]
+        - [*Staff]
+      - - [*Healing_Potion]
+        - [*Antitoxin, *Antitoxin, *Antitoxin]
     starting moves: 
       - name: Spellbook
         type: starting
@@ -2961,142 +2960,142 @@ tags:
   - tag: On use <procedure>
     procedure: <procedure>
 equipment:
-  - name: coin
+  - &coin name: coin
     tags: []
     cost: 1
     weight: 0
-  - name: Ragged Bow
+  - &Ragged_Bow name: Ragged Bow
     tags: [Near]
     cost: 15
     weight: 2
-  - name: Fine Bow
+  - &Fine_Bow name: Fine Bow
     tags: [Near, Far]
     cost: 60
     weight: 2
-  - name: Hunter's Bow
+  - &Hunters_Bow name: Hunter's Bow
     tags: [Near, Far]
     cost: 100
     weight: 1
-  - name: Crossbow
+  - &Crossbow name: Crossbow
     tags: [Near, +1 damage, reload]
     cost: 35
     weight: 3
-  - name: Bundle of Arrows
+  - &Bundle_of_Arrows name: Bundle of Arrows
     tags: [3 ammo]
     cost: 1
     weight: 1
-  - name: Elven Arrows
+  - &Elven_Arrows name: Elven Arrows
     tags: [4 ammo]
     cost: 1
     weight: 1
-  - name: Club
+  - &Club name: Club
     tags: [Close]
     cost: 1
     weight: 2
-  - name: Shillelagh
+  - &Shillelagh name: Shillelagh
     tags: [Close]
     cost: 1
     weight: 2
-  - name: Staff
+  - &Staff name: Staff
     tags: [Close, Two-handed]
     cost: 1
     weight: 1
-  - name: Dagger
+  - &Dagger name: Dagger
     tags: [Hand]
     cost: 2
     weight: 1
-  - name: Shiv
+  - &Shiv name: Shiv
     tags: [Hand]
     cost: 2
     weight: 1
-  - name: Knife
+  - &Knife name: Knife
     tags: [Hand]
     cost: 2
     weight: 1
-  - name: Throwing Dagger
+  - &Throwing_Dagger name: Throwing Dagger
     tags: [Thrown, Near]
     cost: 1
     weight: 1
-  - name: Short Sword
+  - &Short_Sword name: Short Sword
     tags: [Close]
     cost: 8
     weight: 1
-  - name: Axe
+  - &Axe name: Axe
     tags: [Close]
     cost: 8
     weight: 1
-  - name: Warhammer
+  - &Warhammer name: Warhammer
     tags: [Close]
     cost: 8
     weight: 1
-  - name: Mace
+  - &Mace name: Mace
     tags: [Close]
     cost: 8
     weight: 1
-  - name: Spear
+  - &Spear name: Spear
     tags: [Reach, Thrown, Near]
     cost: 5
     weight: 1
-  - name: Long Sword
+  - &Long_Sword name: Long Sword
     tags: [Close, +1 damage]
     cost: 15
     weight: 2
-  - name: Battle Axe
+  - &Battle_Axe name: Battle Axe
     tags: [Close, +1 damage]
     cost: 15
     weight: 2
-  - name: Flail
+  - &Flail name: Flail
     tags: [Close, +1 damage]
     cost: 15
     weight: 2
-  - name: Halberd
+  - &Halberd name: Halberd
     tags: [Reach, +1 damage, Two-handed]
     cost: 9
     weight: 2
-  - name: Rapier
+  - &Rapier name: Rapier
     tags: [Close, Percise]
     cost: 25
     weight: 1
-  - name: Dueling Rapier
+  - &Dueling_Rapier name: Dueling Rapier
     tags: [Close, 1 piercing, Percise]
     cost: 50
     weight: 2
-  - name: Leather Armor
+  - &Leather_Armor name: Leather Armor
     tags: [1 armor, worn]
     cost: 10
     weight: 1
-  - name: Chainmail
+  - &Chainmail name: Chainmail
     tags: [1 armor, worn]
     cost: 10
     weight: 1
-  - name: Scale Mail
+  - &Scale_Mail name: Scale Mail
     tags: [2 armor, worn, clumsy]
     cost: 50
     weight: 3
-  - name: Plate armor
+  - &Plate_armor name: Plate armor
     tags: [3 armor, worn, clumsy]
     cost: 350
     weight: 4
-  - name: Shielf
+  - &Shield name: Shield
     tags: [+1 armor]
     cost: 15
     weight: 2
-  - name: Adventuring Gear
+  - &Adventuring_Gear name: Adventuring Gear
     tags: [5 uses]
     cost: 20
     weight: 1
     description: Adventuring gear is a collection of useful mundane items such as chalk, poles, spikes, ropes, etc. When you rummage through your adventuring gear for some useful mundane item, you find what you need and mark off a use.
-  - name: Bandages
+  - &Bandages name: Bandages
     tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: do nothing }]
     cost: 5
     weight: 0
     description: When you have a few minutes to bandage someone else’s wounds, heal them of 4 damage and expend a use.
-  - name: Poultices and Herbs
+  - &Poultices_and_Herbs name: Poultices and Herbs
     tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: do nothing }]
     cost: 10
     weight: 1
     description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
-  - name: Healing Potion
+  - &Healing_Potion name: Healing Potion
     tags:
       - 1 uses
       - On use choose are you healing yourself:
@@ -3108,62 +3107,62 @@ equipment:
     cost: 50
     weight: 0
     description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
-  - name: Keg of Dwarven Stout
+  - &Keg_of_Dwarven_Stout name: Keg of Dwarven Stout
     tags: [1 uses, On use take +1 forward on Carouse]
     cost: 10
     weight: 4
     description: When you open a keg of dwarven stout and let everyone drink freely, take +1 to your Carouse roll. If you drink a whole keg yourself, you are very, very drunk.
-  - name: Bag of Books
+  - &Bag_of_Books name: Bag of Books
     tags: [5 uses, On use take +1 forward on Spout Lore]
     cost: 10
     weight: 2
     description: When your bag of books contains just the right book for the subject you’re spouting lore on, consult the book, mark off a use, and take +1 to your roll.
-  - name: Antitoxin
+  - &Antitoxin name: Antitoxin
     tags: [1 uses]
     cost: 10
     weight: 0
     description: When you drink antitoxin, you’re cured of one poison affecting you.
-  - name: Dungeon Rations
+  - &Dungeon_Rations name: Dungeon Rations
     tags: [Ration, 5 use]
     cost: 3
     weight: 1
     description: Not tasty, but not bad either.
-  - name: Personal Feast
+  - &Personal_Feast name: Personal Feast
     tags: [Ration, 1 use]
     cost: 10
     weight: 1
     description: Ostentatious to say the least.
-  - name: Dwarven Hardtack
+  - &Dwarven_Hardtack name: Dwarven Hardtack
     tags: [Requires Dwarf, Ration, 7 uses]
     cost: 3
     weight: 1
     description: Dwarves say it tastes like home. Everyone else says it tastes like home, if home is a hog farm, and on fire.
-  - name: Dwarven Hardtack
+  - &Elven_Bread name: Elven Bread
     tags: [Ration, 7 uses]
     cost: 10
     weight: 1
     description: Only the greatest of elf-friends are treated to this rare delicacy.
-  - name: Halfling Pipeleaf
+  - &Halfling_Pipeleaf name: Halfling Pipeleaf
     tags: [6 uses, use twice, On use take +1 forward to Parley]
     cost: 5
     weight: 0
     description: When you share halfling pipeleaf with someone, expend two uses and take +1 forward to parley with them.
-  - name: Oil of Tagit
+  - &Oil_of_Tagit name: Oil of Tagit
     tags: [Dangerous, Applied, 3 uses]
     cost: 15
     weight: 0
     description: The target falls into a light sleep.
-  - name: Bloodweed
+  - &Bloodweed name: Bloodweed
     tags: [Dangerous, Touch, 3 uses]
     cost: 12
     weight: 0
     description: Until cured, whenever the afflicted rolls damage, they roll an additional d4 and subtract that result from their normal damage.
-  - name: Goldenroot
+  - &Goldenroot name: Goldenroot
     tags: [Dangerous, Applied, 3 uses]
     cost: 20
     weight: 0
     description: The target treats the next creature they see as a trusted ally, until proved otherwise.
-  - name: Serpent’s Tears
+  - &Serpents_Tears name: Serpent’s Tears
     tags: [Dangerous, Applied, 3 uses]
     cost: 10
     weight: 0
