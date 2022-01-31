@@ -2050,7 +2050,7 @@ playbooks:
       - - [*Leather_Armor]
         - [{ name: Ostentatious clothes, weight: 0, cost: 0, tags: [] }]
       - - [*Dueling_Rapier]
-        - [*Worn_Bow, *Bundle_of_Arrows, *Short_Swird]
+        - [{ name: Worn Bow, weight: 2, cost: 0, tags: [near] }, *Bundle_of_Arrows, *Short_Swird]
       - - [*Adventuring_Gear]
         - [*Bandages]
         - [*Halfling_Pipeleaf]
