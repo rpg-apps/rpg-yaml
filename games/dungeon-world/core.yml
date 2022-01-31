@@ -16,9 +16,9 @@ mechanisms: &mechanisms
       moves 2-5: move array
       moves 6-10: move array
     character fields: &moves-character-fields
-      moves: start as basic moves and special moves
+      moves: start as basic moves join special moves
     formulas:
-      moves 2-10: moves 2-5 and moves 6-10
+      moves 2-10: moves 2-5 join moves 6-10
     procedures: &moves-procedures
       trigger <move>:
         - define moveName to be move.name
@@ -161,7 +161,7 @@ mechanisms: &mechanisms
       race: from race options
     character fields: &race-character-fields
       race: start as race choice.name
-      race move: start as reace choice.move
+      race move: start as race choice.move
     hooks:
       after character creation: add race choice.move to moves
   alignment: &alignment
