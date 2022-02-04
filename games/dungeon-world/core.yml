@@ -381,7 +381,7 @@ special moves:
               Take Death’s bargain and stabilize: set hp=1
               Don’t take Death’s bargain and pass beyond the Black Gates into whatever fate awaits you: die
           miss: die
-  - name: Encumrance
+  - name: Encumbrance
     type: special
     text: >
       When you make a move while carrying weight you may be encumbered. If your weight carried is:
@@ -406,7 +406,7 @@ special moves:
       - use gear rations
       - If you’re somewhere dangerous decide the watch order as well.
       - is level up allowed:
-          yes: trigger Level up
+          yes: trigger Level Up
           no: do nothing
       - choose Did you get at least a few uninterrupted hours of sleep?:
           yes: change hp +maxHP/2
@@ -452,7 +452,7 @@ special moves:
             roll roll+Wis:
               success: You will spot any trouble quick enough to let you get the drop on it.
               partial success: No one gets the drop on you but you don’t get the drop on them either.
-  - name: End Of Session
+  - name: End of Session
     type: special
     text: >
       When you reach the end of a session, choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.
