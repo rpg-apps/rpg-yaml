@@ -137,7 +137,7 @@ mechanisms: &mechanisms
       base damage: formula
       max hp: formula
     character fields: &damage-character-fields
-      damage: start as base damage
+      damage: base damage
       hp: start as max hp
       armor: start as 0
     procedures: &damage-procedures
