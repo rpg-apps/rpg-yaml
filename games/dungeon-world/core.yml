@@ -141,11 +141,13 @@ mechanisms: &mechanisms
       hp: start as max hp
       armor: start as 0
     procedures: &damage-procedures
-      deal <number>: show number
+      deal <formula:damage>: show damage
       take damage:
         - "reduce hp by ((number input damage) as number) - ((boolean input ignore armor?) ? 0 : max of 0 and (armor - number input piercing))"
         - is hp<0:
-          yes: set hp = 0
+          yes:
+            - set hp = 0
+            - trigger Last Breath
           no: do nothing
       "take <number:damage> damage [that ignores armor]":
         is that ignore armor:
