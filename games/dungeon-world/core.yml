@@ -90,7 +90,7 @@ mechanisms: &mechanisms
           "16..17": 2
           "18..20": 3
       "<boolean:debility> modifier (number)": "debility ? (-1) : 0"
-      roll: |2d6|
+      roll: .2d6.
     procedures: &roll-procedures
       roll <number> {options}:
         switch number:
@@ -226,7 +226,7 @@ basic moves:
       roll roll+Str:
         success:
           choose do +1d6 damage but expose yourself to the enemy’s attack?:
-            yes: [deal damage+|1d6|, take damage]
+            yes: [deal damage+.1d6., take damage]
             no: deal damage
         partial success: [deal damage, take damage]
   - name: Volley
@@ -245,7 +245,7 @@ basic moves:
         partial success:
           choose:
             You have to move to get the shot placing you in danger as described by the GM.: You have to move to get the shot placing you in danger as described by the GM.
-            You have to take what you can get, -1d6 damage.: take -|1d6| forward to damage
+            You have to take what you can get, -1d6 damage.: take -.1d6. forward to damage
             You have to take several shots, reducing your ammo by one.: use gear with tag ammo
   - name: Defy Danger
     type: basic
@@ -998,7 +998,7 @@ all techniques:
         * On a miss, your showboating costs you in some substantial way – the GM will tell you how.
     before:
       roll roll+dex:
-        success: take +|1d8| forward to damage
+        success: take +.1d8. forward to damage
         partial success: this technique has do nothing, but it looks really cool!
         miss: your showboating costs you in some substantial way – the GM will tell you how.
     after: do nothing
@@ -1008,15 +1008,15 @@ all techniques:
     after: do nothing
   - name: Burning
     text: Your attack deals an extra 1d4 damage and lights anything flammable.
-    before: take +|1d4| forward to damage
+    before: take +.1d4. forward to damage
     after: anything flammable is lit up
   - name: Soul-Siphoning
     text: Your attack heals you for 1d4. Heal 1d8 instead if this attack kills your target.
     before: do nothing
     after:
       choose did the attack kill the target?:
-        yes: heal |1d8|
-        no: heal |1d4|
+        yes: heal .1d8.
+        no: heal .1d4.
   - name: Torrential
     text: Your attack ends with a flurry of strikes that your opponent must dedicate effort to blocking or avoiding. If they instead attack you in response to your attack, deal your damage again (this does not apply techniques).
     before: do nothing
@@ -1026,7 +1026,7 @@ all techniques:
         no: do nothing
   - name: Burst
     text: Your attack deals an additional 1d4 damage and gains the ‘forceful’ tag.
-    before: take +|1d4| forward to damage
+    before: take +.1d4. forward to damage
     after: do nothing
   - name: Quicksilver
     text: Your blade cuts faster than the eye can see, preventing your opponent from mounting a proper defense. Gain 2 piercing on your attack.
@@ -1371,7 +1371,7 @@ playbooks:
       - [Cropped Hair, Flowing Hair, Hooded Head]
       - [Aristocratic Clothes, Threadbare Clothes, Training Clothes]
       - [Muscular Body, Lithe Body, Scarred Body]
-    damage: |d8|
+    damage: .d8.
     max hp: constitution+8
     race options:
       - name: Elf
@@ -1711,7 +1711,7 @@ playbooks:
       - [Mighty thews, Long shanks, Scrawny body, Supple body]
       - [Strange tattoos, Unusual jewelry, Unmarred by decoration]
       - [Scraps, Silks, Scavenger’s outfit, Weather inappropriate clothes]
-    damage: |d10|
+    damage: .d10.
     max hp: Constitution+8
     race options:
       - name: Outsider
@@ -1979,7 +1979,7 @@ playbooks:
           appetites: start as []
         formulas:
           <<: *roll-formulas
-          roll: "(input boolean are you pursuing an appetite?) ? |d6|+|d8| : |2d6|"
+          roll: "(input boolean are you pursuing an appetite?) ? .d6.+.d8. : .2d6."
         procedures:
           roll <number> {options}:
             - roll <number> {options}:
@@ -1989,7 +1989,7 @@ playbooks:
                     - options.miss or options.failure or "Oh oh... The GM will tell you what just happened, but at least you got XP!"
                   "7..9": [options."partial success", options.hit]
                   "10..15": [options.success, options.hit]
-            - is last |d6| > last |d8|:
+            - is last .d6. > last .d8.:
                 yes: the GM will introduce a complication or danger that comes about due to your heedless pursuits.
                 no: do nothing
   bard:
@@ -2012,7 +2012,7 @@ playbooks:
       - [Fancy Hair, Wild Hair, Stylish Cap]
       - [Finery, Traveling Clothes, Poor Clothes]
       - [Fit Body, Well-fed Body, Thin Body]
-    damage: |d6|
+    damage: .d6.
     max hp: constitution+6
     race options:
       - name: Elf
@@ -2151,7 +2151,7 @@ playbooks:
         procedure:
           - choose a target
           - roll roll+con:
-              hit: deal |d10|
+              hit: deal .d10.
               success: the target is deafened for a few minutes
               partial success: "it’s out of control: the GM will choose an additional target nearby."
       - name: A Little Help From My Friends
@@ -2279,7 +2279,7 @@ playbooks:
       - [Tonsure, Strange Hair, Bald]
       - [Flowing Robes, Habit, Common Garb]
       - [Thin Body, Knobby Body, Flabby Body]
-    damage: |d6|
+    damage: .d6.
     max hp: Constitution+8
     race options:
       - name: dwarf
@@ -2441,7 +2441,7 @@ playbooks:
         procedure:
           choose embrace the pain:
             yes:
-              - take |1d4| damage that ignores armor
+              - take .1d4. damage that ignores armor
               - take +1 forward to cast a spell
             no: do nothing
       - name: Empower
@@ -2535,7 +2535,7 @@ playbooks:
       - [Wise Eyes, Wild Eyes, Haunting Eyes]
       - [Furry Hood, Messy Hair, Braided Hair]
       - [Ceremonial Garb, Practical Leathers, Weathered Hides]
-    damage: |d6|
+    damage: .d6.
     max hp: Constitution+6
     race options:
       - name: elf
@@ -2697,7 +2697,7 @@ playbooks:
       - [Wild Hair, Shorn Hair, Battered Helm]
       - [Calloused Skin, Tanned Skin, Scarred Skin]
       - [Built Body, Lithe Body, Ravaged Body]
-    damage: |d10|
+    damage: .d10.
     max hp: Constitution+10
     race options:
       - name: dwarf
@@ -2863,7 +2863,7 @@ playbooks:
       - [Strange brands, ritual scars, perfect skin]
       - [Imperious bearing, manic attitude, barely-hidden rage]
       - [Crackling voice, whispering voice, roaring voice]
-    damage: |d8|
+    damage: .d8.
     max hp: Constitution+4
     race options:
       - name: human
@@ -2982,7 +2982,7 @@ playbooks:
       - [Helmet, Styled Hair, Bald]
       - [Worn Holy Symbol, Fancy Holy Symbol]
       - [Fit Body, Bulky Body, Thin Body]
-    damage: |d10|
+    damage: .d10.
     max hp: Constitution+10
     race options:
       - name: human
@@ -3136,7 +3136,7 @@ playbooks:
       - [Hooded Head, Wild Hair, Bald]
       - [Cape, Camouflage, Traveling Clothes]
       - [Lithe Body, Wild Body, Sharp Body]
-    damage: |d8|
+    damage: .d8.
     max hp: Constitution+8
     race options:
       - name: elf
@@ -3300,7 +3300,7 @@ playbooks:
       - [Hooded Head, Messy Hair, Cropped Hair]
       - [Dark Clothes, Fancy Clothes, Common Clothes]
       - [Lithe Body, Knobby Body, Flabby Body]
-    damage: |d8|
+    damage: .d8.
     max hp: Constitution+6
     race options:
       - name: halfling
@@ -3466,7 +3466,7 @@ playbooks:
       - [Styled Hair, Wild Hair, Pointed Hat]
       - [Worn Robes, Stylish Robes, Strange Robes]
       - [Pudgy Body, Creepy Body, Thin Body]
-    damage: |d4|
+    damage: .d4.
     max hp: Constitution+4
     race options:
       - name: elf
