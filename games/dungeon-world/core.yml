@@ -161,8 +161,7 @@ mechanisms: &mechanisms
     choices: &race-choices
       race: from race options
     character fields: &race-character-fields
-      race: start as race choice.name
-      race move: start as race choice.move
+      race: start as race choice
     hooks:
       after character creation: add race choice.move to moves
   alignment: &alignment
@@ -173,8 +172,7 @@ mechanisms: &mechanisms
     choices: &alignment-choices
       alignment: from alignment options
     character fields: &alignment-character-fields
-      alignment: start as alignment choice.name
-      alignment goal: start as alignment choice.goal
+      alignment: start as alignment choice
     formulas:
       alignment met (boolean): boolean input Did you `alignment.goal`?
   bonds: &bonds
