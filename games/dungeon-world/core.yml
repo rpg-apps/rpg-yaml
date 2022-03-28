@@ -34,9 +34,9 @@ mechanisms: &mechanisms
           yes: gain choice from moves 2-5
           no: gain choice from moves 2-10
     hooks:
-      after character creation:
+      on initialization over:
         for move in starting moves: gain move
-      after value change:
+      on change over:
         for move in moves where move.trigger starts with on and (part 3..end of move.trigger) as boolean: trigger move
   description: &description
     playbook fields: &description-playbook-fields
@@ -163,7 +163,7 @@ mechanisms: &mechanisms
     character fields: &race-character-fields
       race: start as race choice
     hooks:
-      after character creation: add race choice.move to moves
+      on initialization over: add race choice.move to moves
   alignment: &alignment
     types: &alignment-types
       alignment: { name: text, goal: text }
