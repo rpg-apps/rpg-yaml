@@ -13,6 +13,7 @@ mechanisms: &mechanisms
       basic moves: large
       special moves: large
     playbook fields: &moves-playbook-fields
+      starting moves: move array
       moves 2-5: move array
       moves 6-10: move array
     character fields: &moves-character-fields
