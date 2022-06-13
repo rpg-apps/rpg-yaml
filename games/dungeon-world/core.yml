@@ -38,7 +38,7 @@ mechanisms: &mechanisms
       on initialization over:
         for move in starting moves: gain move
       on change over:
-        for move in moves where move.trigger starts with on and (part 3..end of move.trigger) as boolean: trigger move
+        for move in moves where (move.trigger starts with on) and ((part 3..end of move.trigger) as boolean): trigger move
   description: &description
     playbook fields: &description-playbook-fields
       in a sentence: text
