@@ -2,43 +2,6 @@ game: dungeon-world
 rulebook: core
 parser: 1.0
 mechanisms: &mechanisms
-  moves: &moves
-    types:
-      move:
-        name: text
-        type: text
-        trigger: text
-        procedure: procedure
-    global fields: &moves-global-fields
-      basic moves: large
-      special moves: large
-    playbook fields: &moves-playbook-fields
-      starting moves: move array
-      moves 2-5: move array
-      moves 6-10: move array
-    character fields: &moves-character-fields
-      moves: start as basic moves join special moves
-    formulas:
-      moves 2-10: moves 2-5 join moves 6-10
-    procedures: &moves-procedures
-      trigger <move>:
-        - define moveName to be move.name
-        - define moveType to be move.type
-        - execute move.procedure
-      gain <move>:
-        - add move to moves
-        - is move.trigger=instant:
-            yes: trigger move
-            no: do nothing
-      add advanced move:
-        is level<6:
-          yes: gain choice from moves 2-5
-          no: gain choice from moves 2-10
-    hooks: &moves-hooks
-      on initialization over:
-        for move in starting moves: gain move
-      on change over:
-        for move in moves where ((move.trigger starts with on) and ((part 3..end of move.trigger) as boolean)): trigger move
   description: &description
     playbook fields: &description-playbook-fields
       in a sentence: text
@@ -53,11 +16,6 @@ mechanisms: &mechanisms
       name: start as name choice
       description: start as description choice
       look: start as look choice
-  expirience: &expirience
-    character fields: &expirience-character-fields
-      level: start as 1
-      xp: start as 0
-      level up allowed: (level + 7) <= xp
   roll: &roll
     global fields: &roll-global-fields
       initial stats: [8, 9, 12, 13, 15 ,16]
@@ -121,6 +79,48 @@ mechanisms: &mechanisms
           Scarred: set scarred = false
       "take <number> forward to <string:filter>": modify 1 filter number
       "take <number> ongoing to <string:filter>": modify filter number
+  moves: &moves
+    types:
+      move:
+        name: text
+        type: text
+        trigger: text
+        procedure: procedure
+    global fields: &moves-global-fields
+      basic moves: large
+      special moves: large
+    playbook fields: &moves-playbook-fields
+      starting moves: move array
+      moves 2-5: move array
+      moves 6-10: move array
+    character fields: &moves-character-fields
+      moves: start as basic moves join special moves
+    formulas:
+      moves 2-10: moves 2-5 join moves 6-10
+    procedures: &moves-procedures
+      trigger <move>:
+        - define moveName to be move.name
+        - define moveType to be move.type
+        - execute move.procedure
+      gain <move>:
+        - add move to moves
+        - is move.trigger=instant:
+            yes: trigger move
+            no: do nothing
+      add advanced move:
+        is level<6:
+          yes: gain choice from moves 2-5
+          no: gain choice from moves 2-10
+    hooks: &moves-hooks
+      on initialization over:
+        for move in starting moves: gain move
+      on change over:
+        for move in moves where ((move.trigger starts with on) and ((part 3..end of move.trigger) as boolean)): trigger move
+  expirience: &expirience
+    character fields: &expirience-character-fields
+      level: start as 1
+      xp: start as 0
+      level up allowed: (level + 7) <= xp
   holds: &holds
     types: &holds-types
       hold: { name: text, options: procedure array }
@@ -1938,27 +1938,6 @@ playbooks:
             partial success: the sacrifice is not enough and your gods take of your flesh as well, but still grant you some insight or boon.
             miss: you earn the ire of the fickle spirits.
     mechanisms:
-      moves:
-        <<: *moves
-        choices:
-          armor move: from armor moves
-        global fields:
-          <<: *moves-global-fields
-          armor moves:
-            - name: Full Plate and Packing Steel
-              text: You ignore the clumsy tag on armor you wear.
-              trigger: constant
-              procedure: modify equip(armor) -clmusy
-            - name: Unencumbered, Unharmed
-              text: So long as you are below your Load and neither wear armor nor carry a shield, take +1 armor.
-              trigger: constant
-              procedure:
-                is weight<load&no_armor: modify armor +1 ongoing
-        hooks:
-          <<: *moves-hooks
-          on initialization over:
-            - for move in starting moves: gain move
-            - add armor move choice.move to moves
       description:
         <<: *description
         playbook fields:
@@ -2001,6 +1980,27 @@ playbooks:
             - is last d6 > last d8:
                 yes: the GM will introduce a complication or danger that comes about due to your heedless pursuits.
                 no: do nothing
+      moves:
+        <<: *moves
+        choices:
+          armor move: from armor moves
+        global fields:
+          <<: *moves-global-fields
+          armor moves:
+            - name: Full Plate and Packing Steel
+              text: You ignore the clumsy tag on armor you wear.
+              trigger: constant
+              procedure: modify equip(armor) -clmusy
+            - name: Unencumbered, Unharmed
+              text: So long as you are below your Load and neither wear armor nor carry a shield, take +1 armor.
+              trigger: constant
+              procedure:
+                is weight<load&no_armor: modify armor +1 ongoing
+        hooks:
+          <<: *moves-hooks
+          on initialization over:
+            - for move in starting moves: gain move
+            - add armor move choice.move to moves
   bard:
     in a sentence: A travelling performer who knows the stories of the land and tells of its heros
     introduction: >
