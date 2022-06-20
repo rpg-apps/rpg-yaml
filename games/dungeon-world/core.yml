@@ -1950,9 +1950,7 @@ playbooks:
           title: start as title choice
       moves:
         choices:
-          armor move:
-            choose: from armor moves
-            after: add armor move choice.move to moves
+          armor move: choose from armor moves
         global fields:
           armor moves:
             Full Plate and Packing Steel:
@@ -1964,6 +1962,8 @@ playbooks:
               trigger: constant
               procedure:
                 is weight<load&no_armor: modify armor +1 ongoing
+        hooks:
+          on initialization over: add armor move choice.move to moves
       roll:
         global fields:
           <<: *roll-global-fields
