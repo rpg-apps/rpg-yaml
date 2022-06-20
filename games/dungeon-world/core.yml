@@ -1954,16 +1954,17 @@ playbooks:
         global fields:
           <<: *moves-global-fields
           armor moves:
-            - name: Full Plate and Packing Steel:
+            - name: Full Plate and Packing Steel
               text: You ignore the clumsy tag on armor you wear.
               trigger: constant
               procedure: modify equip(armor) -clmusy
-            - name: Unencumbered, Unharmed:
+            - name: Unencumbered, Unharmed
               text: So long as you are below your Load and neither wear armor nor carry a shield, take +1 armor.
               trigger: constant
               procedure:
                 is weight<load&no_armor: modify armor +1 ongoing
         hooks:
+          <<: *moves-hooks
           on initialization over:
             - for move in starting moves: gain move
             - add armor move choice.move to moves
