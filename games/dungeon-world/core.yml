@@ -1950,7 +1950,7 @@ playbooks:
           title: start as title choice
       moves:
         choices:
-          armor move: choose from armor moves
+          armor move: from armor moves
         global fields:
           armor moves:
             Full Plate and Packing Steel:
