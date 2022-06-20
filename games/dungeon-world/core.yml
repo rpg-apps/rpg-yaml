@@ -34,7 +34,7 @@ mechanisms: &mechanisms
         is level<6:
           yes: gain choice from moves 2-5
           no: gain choice from moves 2-10
-    hooks:
+    hooks: &moves-hooks
       on initialization over:
         for move in starting moves: gain move
       on change over:
@@ -1952,6 +1952,7 @@ playbooks:
         choices:
           armor move: from armor moves
         global fields:
+          <<: *moves-global-fields
           armor moves:
             Full Plate and Packing Steel:
               text: You ignore the clumsy tag on armor you wear.
@@ -1963,6 +1964,7 @@ playbooks:
               procedure:
                 is weight<load&no_armor: modify armor +1 ongoing
         hooks:
+          <<: *moves-hooks
           on initialization over: add armor move choice.move to moves
       roll:
         global fields:
