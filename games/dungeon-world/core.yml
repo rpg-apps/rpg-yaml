@@ -1938,17 +1938,8 @@ playbooks:
             partial success: the sacrifice is not enough and your gods take of your flesh as well, but still grant you some insight or boon.
             miss: you earn the ire of the fickle spirits.
     mechanisms:
-      description:
-        playbook fields:
-          <<: *description-playbook-fields
-          title options: text array
-        choices:
-          <<: *description-choices
-          title: text with recommendations from title options
-        character fields:
-          <<: *description-character-fields
-          title: start as title choice
       moves:
+        <<: *moves
         choices:
           armor move: from armor moves
         global fields:
@@ -1968,7 +1959,19 @@ playbooks:
           on initialization over:
             - for move in starting moves: gain move
             - add armor move choice.move to moves
+      description:
+        <<: *description
+        playbook fields:
+          <<: *description-playbook-fields
+          title options: text array
+        choices:
+          <<: *description-choices
+          title: text with recommendations from title options
+        character fields:
+          <<: *description-character-fields
+          title: start as title choice
       roll:
+        <<: *roll
         global fields:
           <<: *roll-global-fields
           appetite options: 
