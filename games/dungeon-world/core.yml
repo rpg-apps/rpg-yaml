@@ -1460,7 +1460,7 @@ playbooks:
         type: starting
         text: Begin play with 4 techniques.
         trigger: instant
-        procedure: add (choice 4 from all techinques) to aquired techniques
+        procedure: add (choice 4 from all techniques) to aquired techniques
     moves 2-5:
       - name: Armored
         type: advanced
@@ -1538,7 +1538,7 @@ playbooks:
         type: advanced
         text: Gain 3 techniques
         trigger: instant
-        procedure: add (choice 3 from all techinques) to aquired techniques
+        procedure: add (choice 3 from all techniques) to aquired techniques
       - name: Show Off
         type: advanced
         text: >
@@ -1570,7 +1570,7 @@ playbooks:
         type: advanced
         text: Gain an additional three techniques.
         trigger: instant
-        procedure: add (choice 3 from all techinques) to aquired techniques
+        procedure: add (choice 3 from all techniques) to aquired techniques
       - name: Two Men Enter, One Man Leaves
         type: advanced
         replaces: To The Death
