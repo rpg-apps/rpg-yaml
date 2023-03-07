@@ -12,36 +12,32 @@ mechanisms: &mechanisms
       name: text with recommendations from name options
       description: long text
       look: text with recommendations from look options
-    character fields: &description-character-fields
-      name: start as name choice
-      description: start as description choice
-      look: start as look choice
   roll: &roll
     global fields: &roll-global-fields
       initial stats: [8, 9, 12, 13, 15 ,16]
     choices: &roll-choices
-      stat: assign initial stats each to strength, dexterity, constitution, intelligence, wisdom, charisma
+      stats: assign initial stats each to strength, dexterity, constitution, intelligence, wisdom, charisma
     character fields: &roll-character-fields
-      strength: start as stat choice.strength 
-      dexterity: start as stat choice.dexterity
-      constitution: start as stat choice.constitution
-      intelligence: start as stat choice.intelligence
-      wisdom: start as stat choice.wisdom
-      charisma: start as stat choice.charisma
-      weak: start as false
-      shakey: start as false
-      sick: start as false
-      stunned: start as false
-      confused: start as false
-      scarred: start as false
-      str: (modifier for strength) + (weak modifier)
-      dex: (modifier for dexterity) + (shakey modifier)
-      con: (modifier for constitution) + (sick modifier)
-      int: (modifier for intelligence) + (stunned modifier)
-      wis: (modifier for wisdom) + (confused modifier)
-      cha: (modifier for charisma) + (scarred modifier)
+      strength: stats.strength
+      dexterity: stats.dexterity
+      constitution: stats.constitution
+      intelligence: stats.intelligence
+      wisdom: stats.wisdom
+      charisma: stats.charisma
+      weak: false
+      shakey: false
+      sick: false
+      stunned: false
+      confused: false
     formulas: &roll-formulas
-      "modifier for <number:stat> (number)": 
+      scarred: false
+      str (number): (modifier for strength) + (weak modifier)
+      dex (number): (modifier for dexterity) + (shakey modifier)
+      con (number): (modifier for constitution) + (sick modifier)
+      int (number): (modifier for intelligence) + (stunned modifier)
+      wis (number): (modifier for wisdom) + (confused modifier)
+      cha (number): (modifier for charisma) + (scarred modifier)
+      "modifier for <number:stat> (number)":
         switch stat:
           "0..8":  -1
           "9..12":  0
@@ -49,7 +45,6 @@ mechanisms: &mechanisms
           "16..17": 2
           "18..20": 3
       "<boolean:debility> modifier (number)": "debility ? (-1) : 0"
-      roll: 2d6
     procedures: &roll-procedures
       roll <number> {options}:
         switch number:
@@ -61,6 +56,10 @@ mechanisms: &mechanisms
               - Oh oh... The GM will tell you what just happened, but at least you got XP!
           "7..9": [options.partial success, options.hit]
           "10..15": [options.success, options.hit]
+      roll +<number> {options}:
+        roll 2d6+number: options
+      roll {options}:
+        roll 2d6: options
       take a debility:
         choose which debility do you want to take:
           Weak: set weak = true
@@ -77,8 +76,15 @@ mechanisms: &mechanisms
           Stunned: set stunned = false
           Confused: set confused = false
           Scarred: set scarred = false
-      "take <number> forward to <string:filter>": modify 1 filter number
-      "take <number> ongoing to <string:filter>": modify filter number
+      "take <number:mod> forward": modify 1 times turn x into x + mod
+      "take <number:mod> ongoing": modify turn x into x + mod
+      "take <number:mod> forward when <string:filter>": modify when filter 1 times turn x into x + mod
+      "take <number:mod> ongoing when <string:filter>": modify when filter turn x into x + mod
+      "take <number:mod> forward to <string:filter>": modify filter 1 times
+      "take <number:mod> ongoing to <string:filter>": modify filter turn x into x + mod
+      "take <number:mod> forward to <string:target> when <string:filter>": modify target when filter 1 times turn x into x + mod
+      "take <number:mod> ongoing to <string:target> when <string:filter>": modify target when filter turn x into x + mod
+      "take <number:mod> ongoing while <string:filter>": modify while filter turn x into x + mod
   moves: &moves
     types:
       move:
@@ -94,20 +100,20 @@ mechanisms: &mechanisms
       moves 2-5: move array
       moves 6-10: move array
     character fields: &moves-character-fields
-      moves: start as basic moves join special moves
+      moves: basic moves join special moves
     formulas:
       moves 2-10: moves 2-5 join moves 6-10
     procedures: &moves-procedures
-      trigger <move>:
-        - define moveName to be move.name
+      trigger <moveName>:
+        - define move to be first move in moves where move.name = moveName
         - define moveType to be move.type
         - execute move.procedure
       gain <move>:
         - add move to moves
         - is move.trigger=instant:
-            yes: trigger move
+            yes: trigger move.name
             no: do nothing
-      add advanced move:
+      gain advanced move:
         is level<6:
           yes: gain choice for new move from moves 2-5
           no: gain choice for new move from moves 2-10
@@ -115,45 +121,62 @@ mechanisms: &mechanisms
       on initialization over:
         for move in starting moves: gain move
       on change over:
-        for move in moves where ((move.trigger starts with on) and ((part 3..end of move.trigger) as boolean)): trigger move
+        for move in moves where ((move.trigger starts with on) and ((part 3..end of move.trigger) as boolean)): trigger move.name
   expirience: &expirience
     character fields: &expirience-character-fields
-      level: start as 1
-      xp: start as 0
+      level: 1 allow 1-20
+      xp: 0 allow 0-inf
+    formulas:
       level up allowed: (level + 7) <= xp
   holds: &holds
     types: &holds-types
       hold: { name: text, options: procedure array }
     character fields: &holds-character-fields
-      holds: start as []
+      holds: []
     procedure: &holds-procedures
       "hold <number:count=1> <string:name=hold> {options}":
         repeat count times: add {name,options} to holds
       "spend a <string:name=hold> to {options}":
         for hold in holds where hold.name = name:
           set hold.options = options
-      spend <name=hold>: remove (first hold in holds where hold.name = name) from holds
+      spend <name=hold>:
+        - define hold to be first hold in holds where hold.name = name
+        - execute choice for use hold from hold.options
+        - remove hold from holds
   damage: &damage
     playbook fields: &damage-playbook-fields
       damage: formula
       max hp: formula
     character fields: &damage-character-fields
-      hp: start as max hp
-      armor: start as 0
+      hp: max hp allow 0-max hp
+      armor: 0 allow 0-inf
     procedures: &damage-procedures
-      deal <formula:damage>: show damage
+      deal <formula:damage>:
+        is ignores armor:
+          yes: show `damage`, ignores armor
+          no:
+            is piercing != 0:
+              yes: show `damage`, `piercing` piercing
+              no: show `damage`
       take damage:
-        - "reduce hp by (number input damage) - ((boolean input ignore armor?) ? 0 : max of 0 and (armor - number input piercing))"
-        - is hp<0:
+        is (boolean input ignore armor?):
+          yes: "take (number input damage) damage ignores armor"
+          no: "take (number input damage) damage with (number input piercing) piercing"
+      take <number> damage [ignores armor]:
+        is ignores armor:
+          yes: "take number damage ignores armor"
+          no: "take number damage with (number input piercing) piercing"
+      take <number> damage [ignores armor] with <number:piercing=0> piercing:
+        - "reduce hp by number - (ignores armor ? 0 : max of 0 and (armor - piercing))"
+        - is hp<=0:
           yes:
             - set hp = 0
-            - trigger Last Breath
           no: do nothing
-      "take <number:damage> damage [that ignores armor]":
-        is that ignore armor:
-          yes: reduce hp by number
-          no: reduce hp by (number - armor)
-      heal <number>: add number to hp
+      heal <number>:
+        - add number to hp
+        - is hp>=maxHP:
+          yes: set hp = maxHP
+          no: do nothing
   race: &race
     types: &race-types
       race: { name: text, move: move }
@@ -161,8 +184,6 @@ mechanisms: &mechanisms
       race options: race array
     choices: &race-choices
       race: from race options
-    character fields: &race-character-fields
-      race: start as race choice
     hooks:
       on initialization over: add race choice.move to moves
   alignment: &alignment
@@ -172,21 +193,21 @@ mechanisms: &mechanisms
       alignment options: alignment array
     choices: &alignment-choices
       alignment: from alignment options
-    character fields: &alignment-character-fields
-      alignment: start as alignment choice
     formulas:
       alignment met (boolean): boolean input Did you `alignment.goal`?
   bonds: &bonds
     playbook fields: &bonds-playbook-fields
       bond options: text array
     character fields: &bonds-character-fields
-      bonds: start as []
+      bonds: []
+    formula:
+      bond: number of bonds where bond contains (text input character name)
     procedures: &bonds-procedures
       add bond: add (choice for add bond from bond options) to bonds
       resolve bond: remove (choice for remove bond from bonds) from bonds
   equipment: &equipment
     types: &equipment-types
-      tag: { tag: text, text: text, procedure: procedure }
+      tag: { tag: text, description: text, init: procedure, usage: procedure }
       equipment: { name: text, description: text, tags: tag array, weight: number, cost: number }
     global fields: &equipment-global-fields
       tags: large
@@ -197,23 +218,31 @@ mechanisms: &mechanisms
     choices: &equipment-choices
       gear: from starting gear options
     character fields: &equipment-character-fields
-      gear: start as gear choice
-      ignored tags: start as []
+      ignored tags: []
+      weapons: []
+      armors: []
+    formulas:
       weight: sum of (equipment.weight for equipment in gear)
     procedures: &equipment-procedures
       use <amount=1> tagged <tag>:
-        for tag in (choice amount for use from (for equipment in gear where tag in equipment.tags)).tags:
-          is tag.name in ignored tags:
-            yes: do nothing
-            no: execute tag.procedure
-      use <amount=1> <name>:
-        for tag in (choice amount for use from (for equipment in gear where equipment.name is name)).tags:
-          is tag.name in ignored tags:
-            yes: do nothing
-            no: execute tag.procedure
+        for equipment in (choice amount for use from (for equipment in gear where tag in equipment.tags)):
+          for tagName in equipment.tags where tagName not in ignored tags:
+            execute (first tag in tags where tagName match tag.tag).procedure
+      use <amount=1> <text:name>:
+        for equipment in (choice amount for use from (for equipment in gear where equipment.name = name)):
+          for tagName in equipment.tags where tagName not in ignored tags:
+            execute (first tag in tags where tagName match tag.tag).procedure
       ignore tag <tag>: add tag.name to ignored tags
       aknoledge tag <tag>: remove tag.name to ignored tags
-basic moves: 
+      equip <text:name>:
+        - define equiped = first equipment in gear where equipment.name = name
+        - if "weapon" in equiped.tags: add equiped to weapons
+        - if "armor" in equiped.tags: add equiped to armors
+      unequip <text:name>:
+        - define equiped = first equipment in gear where equipment.name = name
+        - if "weapon" in equiped.tags: remove equiped from weapons
+        - if "armor" in equiped.tags: remove equiped from armors
+basic moves:
   - name: Hack and Slash
     type: basic
     text: >
@@ -222,7 +251,7 @@ basic moves:
       * On a 7–9, you deal your damage to the enemy and the enemy makes an attack against you.
     trigger: When you attack an enemy in melee
     procedure:
-      roll roll+Str:
+      roll +str:
         success:
           choose do +1d6 damage but expose yourself to the enemy’s attack?:
             yes: [deal damage+1d6, take damage]
@@ -239,13 +268,13 @@ basic moves:
         * You have to take several shots, reducing your ammo by one.
     trigger: When you take aim and shoot at an enemy at range
     procedure:
-      roll roll+Dex:
+      roll +dex:
         hit: deal damage
         partial success:
           choose:
             You have to move to get the shot placing you in danger as described by the GM.: You have to move to get the shot placing you in danger as described by the GM.
             You have to take what you can get, -1d6 damage.: take -1d6 forward to damage
-            You have to take several shots, reducing your ammo by one.: use gear with tag ammo
+            You have to take several shots, reducing your ammo by one.: use gear tagged ammo
   - name: Defy Danger
     type: basic
     text: >
@@ -262,13 +291,13 @@ basic moves:
     trigger: When you act despite an imminent threat or suffer a calamity
     procedure:
       - choose How do you deal with it?:
-          By powering through (Str): modify once roll +Str
-          By getting out of the way or acting fast (Dex): modify once roll +Dex
-          By enduring (Con): modify once roll +Con
-          With quick thinking (Str): modify once roll +Int
-          Through mental fortitude (Wis): modify once roll +Wis
-          Using charm and social grace (Cha): modify once roll +Cha
-      - roll roll:
+          By powering through (Str): define Stat to be str
+          By getting out of the way or acting fast (Dex): define Stat to be dex
+          By enduring (Con): define Stat to be con
+          With quick thinking (Int): define Stat to be int
+          Through mental fortitude (Wis): define Stat to be wis
+          Using charm and social grace (Cha): define Stat to be cha
+      - roll +Stat:
           success: You do what you set out to, the threat doesn’t come to bear.
           partial success: "You stumble, hesitate, or flinch: the GM will offer you a worse outcome, hard bargain, or ugly choice."
   - name: Defend
@@ -284,7 +313,7 @@ basic moves:
       * Deal damage to the attacker equal to your level.
     trigger: When you stand in defense of a person, item, or location under attack
     procedure:
-      - roll roll+Con:
+      - roll +con:
           success: hold 3
           partial success: hold 1
       - use:
@@ -292,7 +321,7 @@ basic moves:
           Halve the attack’s effect or damage.: Halve the attack’s effect or damage.
           Open up the attacker to an ally giving that ally +1 forward against the attacker.:
             choose Is the ally you?:
-              yes: modify against the enemy +1 forward
+              yes: take 1 forward when against the attacker
               no: do nothing
           Deal damage to the attacker equal to your level.: deal level/2
   - name: Spout Lore
@@ -304,7 +333,7 @@ basic moves:
       The GM might ask you “How do you know this?” Tell them the truth, now.
     trigger: When you consult your accumulated knowledge about something
     procedure:
-      roll roll+Int:
+      roll +int:
         success: The GM will tell you something interesting and useful about the subject relevant to your situation, and might ask you “How do you know this?” Tell them the truth, now.
         patrial success: The GM will only tell you something interesting — it’s on you to make it useful, and might ask you “How do you know this?” Tell them the truth, now.
   - name: Discern Realities
@@ -323,7 +352,7 @@ basic moves:
       * What here is not what it appears to be?
     trigger: When you closely study a situation or person
     procedure:
-      - roll roll+Wis:
+      - roll +wis:
           success: choose 3
           partial succes: choose 1
       - options: 
@@ -333,7 +362,7 @@ basic moves:
           - What here is useful or valuable to me?
           - Who’s really in control here?
           - What here is not what it appears to be?
-      - take +1 forward when acting on the answers
+      - take 1 forward when acting on the answers
   - name: Parley
     type: basic
     text: >
@@ -343,7 +372,7 @@ basic moves:
       * On a 7–9, they will do what you ask, but need some concrete assurance of your promise, right now.
     trigger: When you have leverage on a GM Character and manipulate them
     procedure:
-      roll roll+Cha:
+      roll +cha:
         success: They do what you ask if you first promise what they ask of you.
         patrial success: They will do what you ask, but need some concrete assurance of your promise, right now.
   - name: Aid or Interfere
@@ -354,12 +383,13 @@ basic moves:
       * On a 7–9 you also expose yourself to danger, retribution, or cost.
     trigger: When you help or hinder someone you have a bond with
     procedure:
-      roll roll+bond:
+      roll +bond:
         success:
           choose wether they take +1 or -2:
             They take +1: They take +1
             They take -2: They take -2
         partial success also: You expose yourself to danger, retribution, or cost.
+# DONE to here
 special moves:
   - name: Last Breath
     type: special
@@ -374,11 +404,11 @@ special moves:
       - You catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
       - roll roll:
           success:
-            - set hp=1
+            - set hp = 1
             - You’ve cheated Death — you’re in a bad spot but you’re still alive.
           partial success:
             choose death himself offers you a bargain:
-              Take Death’s bargain and stabilize: set hp=1
+              Take Death’s bargain and stabilize: set hp = 1
               Don’t take Death’s bargain and pass beyond the Black Gates into whatever fate awaits you: die
           miss: die
   - name: Encumbrance
@@ -389,11 +419,8 @@ special moves:
       * Equal to or less than your load, you suffer no penalty
       * Less than or equal to your load+2, you take -1 ongoing until you lighten your burden
       * Greater than your load+2, you have a choice: drop at least 1 weight and roll at -1, or automatically fail
-    trigger: on wieght>load
-    procedure:
-      is weight>load+2:
-        yes: modify all autofail forced ongoing until weight<=load+2
-        no: modify all -1 forced ongoing until weight>load+2||wright<=load
+    trigger: instant
+    procedure: "modify roll into roll + (weight > load ? (weight > load + 2 ? -6 : -1) : 0)"
   - name: Make Camp
     type: special
     text: >
@@ -403,13 +430,13 @@ special moves:
       When you wake from at least a few uninterrupted hours of sleep heal damage equal to half your max HP.
     trigger: When you settle in to rest
     procedure:
-      - use gear rations
+      - use gear tagged rations
       - If you’re somewhere dangerous decide the watch order as well.
       - is level up allowed:
           yes: trigger Level Up
           no: do nothing
       - choose Did you get at least a few uninterrupted hours of sleep?:
-          yes: change hp +maxHP/2
+          yes: add maxHP/2 to hp
           no: do nothing
   - name: Take Watch
     type: special
@@ -420,10 +447,10 @@ special moves:
       * On a miss, whatever lurks outside the campfire’s light has the drop on you.
     trigger: When you’re on watch and something approaches the camp
     procedure:
-        roll roll+Wis:
+        roll +wis:
           success:
             - You’re able to wake the camp and prepare a response
-            - modify all +1 forward
+            - take 1 forard
           partial success: You react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
           miss: Whatever lurks outside the campfire’s light has the drop on you.
   - name: Undertake a Perilous Journey
@@ -441,15 +468,15 @@ special moves:
     procedure:
         choose What is your role in this journey?:
           Quartermaster:
-            roll roll+Wis:
+            roll +wis:
               success: You reduce the number of rations required by one.
               partial success: The normal number of rations are consumed.
           Trailblazer:
-            roll roll+Wis:
+            roll +wis:
               success: You reduce the amount of time it takes to reach your destination (the GM will say by how much).
               partial success: The journey takes about as long as expected.
           Scout:
-            roll roll+Wis:
+            roll +wis:
               success: You will spot any trouble quick enough to let you get the drop on it.
               partial success: No one gets the drop on you but you don’t get the drop on them either.
   - name: End of Session
@@ -467,21 +494,21 @@ special moves:
         - choose Choose one of your bonds that you feel is resolved (completely explored, no longer relevant, or otherwise). Ask the player of the character you have the bond with if they agree. If they do, mark XP and write a new bond with whomever you wish.:
               Resolve a bond:
                 - resolve bond
-                - change xp by 1
+                - add 1 to xp
                 - create bond
               Create a new bond: create bond
               Do not resolve a bond: do nothing
         - is alignment met:
-            yes: change xp by 1
+            yes: add 1 to xp
             no: do nothing
         - choose Did we learn something new and important about the world?:
-            yes: change xp by 1
+            yes: add 1 to xp
             no: do nothing
         - choose Did we overcome a notable monster or enemy?:
-            yes: change xp by 1
+            yes: add 1 to xp
             no: do nothing
         - choose Did we loot a memorable treasure?:
-            yes: change xp by 1
+            yes: add 1 to xp
             no: do nothing
   - name: Level Up
     type: special
@@ -494,16 +521,16 @@ special moves:
       * Choose one of your stats and increase it by 1 (this may change your modifier). Changing your Constitution increases your maximum and current HP. Ability scores can’t go higher than 18.
     trigger: When you have downtime (hours or days) and XP equal to (or greater than) your current level+7
     procedure:
-      - change xp by (-1*level)-7
-      - change level by 1
-      - add advanced move
+      - remove level-7 from xp
+      - add 1 to level
+      - gain advanced move
       - choose Choose one of your stats to increase:
-          Strength: change Strength by 1
-          Dexterity: change Dexterity by 1
-          Constitution: change Constitution by 1
-          Intelligence: change Intelligence by 1
-          Wisdom: change Wisdom by 1
-          Charisma: change Charisma by 1
+          Strength: add 1 to strength
+          Dexterity: add 1 to dexterity
+          Constitution: add 1 to constitution
+          Intelligence: add 1 to intelligence
+          Wisdom: add 1 to wisdom
+          Charisma: add 1 to charisma
   - name: Carouse
     type: special
     text: >
@@ -520,10 +547,10 @@ special moves:
     procedure:
     - choose How much do you spend?:
         100 coins (roll+0): use gear 100 coin
-        200 coins (roll+1): [use gear 200 coin, modify all +1 forced forward]
-        300 coins (roll+2): [use gear 300 coin, modify all +2 forced forward]
-        400 coins (roll+3): [use gear 400 coin, modify all +3 forced forward]
-    - roll roll:
+        200 coins (roll+1): [use gear 200 coin, take 1 forward to roll]
+        300 coins (roll+2): [use gear 300 coin, take 2 forward to roll]
+        400 coins (roll+3): [use gear 400 coin, take 3 forward to roll]
+    - roll:
         success: choose 3
         partial success: choose 1
         miss: [choose 1, Things get really out of hand (the GM will say how).]
@@ -544,7 +571,7 @@ special moves:
       choose Is it something readily available in the settlement you’re in?:
         yes: You can buy it in market price
         no:
-          roll roll+Cha:
+          roll +cha:
             success: You find what you’re looking for at a fair price.
             partial success: You’ll have to pay more or settle for something that’s not exactly what you wanted, but close. The GM will tell you what your options are.
   - name: Recover
@@ -556,16 +583,10 @@ special moves:
     trigger: When you do nothing but rest in comfort and safety
     procedure:
       choose How long do you rest?:
-        One day - recover all your HP: change hp by maxHP
+        One day - recover all your HP: set hp = maxHP
         Three days, or two days with a healer - also remove a debility:
-          - change hp by maxHP
-          - choose Choose a debility to remove:
-              Weak: set Weak false
-              Shakey: set Shakey false
-              Sick: set Sick false
-              Stunned: set Stunned false
-              Confused: set Confused false
-              Scarred: set Scarred false
+          - set hp = maxHP
+          - remove a debility
   - name: Recruit
     type: special
     text: >
@@ -580,18 +601,18 @@ special moves:
       * On a miss someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
     trigger: When you put out word that you’re looking to hire help
     procedure:
-      - choose Do you make it known that your pay is generous?: { yes: modify all +1 forced forward, no: do nothing }
-      - choose Do you make it known what you’re setting out to do?: { yes: modify all +1 forced forward, no: do nothing }
-      - choose Do you make it known that they’ll get a share of whatever you find?: { yes: modify all +1 forced forward, no: do nothing }
-      - choose Do you have a useful reputation around these parts?: { yes: modify all +1 forced forward, no: do nothing }
-      - roll roll:
+      - choose Do you make it known that your pay is generous?: { yes: take 1 forward, no: do nothing }
+      - choose Do you make it known what you’re setting out to do?: { yes: take 1 forward, no: do nothing }
+      - choose Do you make it known that they’ll get a share of whatever you find?: { yes: take 1 forward, no: do nothing }
+      - choose Do you have a useful reputation around these parts?: { yes: take 1 forward, no: do nothing }
+      - roll:
           success: You’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
           partial success: You’ll have to settle for someone close to what you want or turn them away.
           miss:
             - Someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
             - choose Bring them along or turn them away?:
                 Bring them along: Bring them along
-                Turn them away: modify recruit -1 forced forward
+                Turn them away: take -1 when moveName = Recruit
   - name: Outstanding Warrants
     type: special
     text: >
@@ -620,89 +641,91 @@ special moves:
       choose If you prepare for:
         Between a week and a month: hold 3
         More then a month: hold 1
-      use: modify all +1 forward
+      use: take 1 forward
 tags:
   - tag: Applied
-    text: It’s only useful when carefully applied to a person or to something they eat or drink.
+    description: It’s only useful when carefully applied to a person or to something they eat or drink.
   - tag: Touch
-    text: It’s used by touching it to the target’s skin.
+    description: It’s used by touching it to the target’s skin.
   - tag: Awkward
-    text: It’s unwieldy and tough to use.
+    description: It’s unwieldy and tough to use.
   - tag: Dangerous
-    text: It’s easy to get in trouble with it. If you interact with it without proper precautions the GM may freely invoke the consequences of your foolish actions.
+    description: It’s easy to get in trouble with it. If you interact with it without proper precautions the GM may freely invoke the consequences of your foolish actions.
   - tag: Ration
-    text: It’s edible, more or less.
+    description: It’s edible, more or less.
   - tag: Requires <something>
-    text: It’s only useful to certain people. If you don’t meet the requirements it works poorly, if at all.
+    description: It’s only useful to certain people. If you don’t meet the requirements it works poorly, if at all.
   - tag: Slow
-    text: It takes minutes or more to use.
+    description: It takes minutes or more to use.
   - tag: Two-handed
-    text: It takes two hands to use it effectively.
+    description: It takes two hands to use it effectively.
   - tag: Worn
-    text: To use it, you have to be wearing it.
-  - tag: <number> <trigger>
-    text: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
-    procedure: modify <trigger> number
-  - tag: <number> uses
-    text: It can only be used n times.
-    procedure:
-      - subtract 1 from uses
-      - is uses<0:
+    description: To use it, you have to be wearing it.
+  - tag: <formula> when <trigger>
+    description: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
+    usage: take formula when trigger
+  - tag: <number:uses> uses
+    description: It can only be used n times.
+    init: define this.uses = uses
+    usage:
+      - remove 1 from this.uses
+      - is uses < 0:
           yes: remove this from gear
   - tag: use twice
-    text: Use two every time.
-    procedure:
-      - subtract 1 from uses
+    description: Use two every time.
+    usage:
+      - remove 1 from uses
       - is uses<0:
           yes: remove this from gear
-  - tag: <number> ammo
-    text: It counts as ammunition for appropriate ranged weapons. The number indicated does not represent individual arrows or sling stones, but represents what you have left on hand.
-    procedure:
-      is ammo=0:
+  - tag: <number:ammo> ammo
+    description: It counts as ammunition for appropriate ranged weapons. The number indicated does not represent individual arrows or sling stones, but represents what you have left on hand.
+    init: define this.ammo = ammo
+    usage:
+      is ammo = 0:
         yes: remove this from gear
   - tag: Forceful
-    text: It can knock someone back a pace, maybe even off their feet.
-  - tag: <number> damage
-    text: It is particularly harmful to your enemies. When you deal damage, you add n to it.
-    procedure: modify once damage number
+    description: It can knock someone back a pace, maybe even off their feet.
+  - tag: <formula> damage
+    description: It is particularly harmful to your enemies. When you deal damage, you add n to it.
+    usage: take formula to damage
   - tag: Ignores Armor
-    text: Don’t subtract armor from the damage taken.
-    procedure: show "Ignores armor" with "deal damage"
+    description: Don’t subtract armor from the damage taken.
+    usage: set ignores armor = yes
   - tag: Messy
-    text: It does damage in a particularly destructive way, ripping people and things apart.
+    description: It does damage in a particularly destructive way, ripping people and things apart.
   - tag: <number> piercing
-    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: show number piercing with "deal damage"
+    description: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
+    usage: set piercing = number piercing
   - tag: Precise
-    text: It rewards careful strikes. You use DEX to hack and slash with this weapon, not STR.
-    procedure: modify Hack and Slash roll+Str = roll+Dex
+    description: It rewards careful strikes. You use DEX to hack and slash with this weapon, not STR.
+    usage: modify Hack and Slash roll+Str = roll+Dex
   - tag: Reload
-    text: After you attack with it, it takes more than a moment to reset for another attack.
+    description: After you attack with it, it takes more than a moment to reset for another attack.
   - tag: Stun
-    text: When you attack with it, it does stun damage instead of normal damage.
+    description: When you attack with it, it does stun damage instead of normal damage.
   - tag: Thrown
-    text: Throw it at someone to hurt them. If you volley with this weapon, you can’t choose to mark off ammo on a 7–9; once you throw it, it’s gone until you can recover it.
+    description: Throw it at someone to hurt them. If you volley with this weapon, you can’t choose to mark off ammo on a 7–9; once you throw it, it’s gone until you can recover it.
   - tag: Hand
-    text: It’s useful for attacking something within your reach, no further.
+    description: It’s useful for attacking something within your reach, no further.
   - tag: Close
-    text: It’s useful for attacking something at arm’s reach plus a foot or two.
+    description: It’s useful for attacking something at arm’s reach plus a foot or two.
   - tag: Reach
-    text: It’s useful for attacking something that’s several feet away—maybe as far as ten.
+    description: It’s useful for attacking something that’s several feet away—maybe as far as ten.
   - tag: Near
-    text: It’s useful for attacking if you can see the whites of their eyes.
+    description: It’s useful for attacking if you can see the whites of their eyes.
   - tag: Far
-    text: It’s useful for attacking something in shouting distance.
+    description: It’s useful for attacking something in shouting distance.
   - tag: <number> armor
-    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack. It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: modify armor = number
+    description: This is missing # TODO
+    usage: modify armor = number
   - tag: <number> armor
-    text: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
-    procedure: take +number ongoing to armor
+    description: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
+    usage: take +number ongoing to armor
   - tag: Clumsy
-    text: It’s tough to move around with. -1 ongoing while using it. This penalty is cumulative.
-    procedure: take -1 ongoing to all
+    description: It’s tough to move around with. -1 ongoing while using it. This penalty is cumulative.
+    usage: take -1 ongoing to all
   - tag: On use <procedure>
-    procedure: <procedure>
+    usage: <procedure>
 equipment:
   - &coin
     name: coin
@@ -996,7 +1019,7 @@ all techniques:
         * On a 7-9, this technique has do nothing, but it looks really cool!
         * On a miss, your showboating costs you in some substantial way – the GM will tell you how.
     before:
-      roll roll+dex:
+      roll +dex:
         success: take +1d8 forward to damage
         partial success: this technique has do nothing, but it looks really cool!
         miss: your showboating costs you in some substantial way – the GM will tell you how.
@@ -1055,11 +1078,13 @@ cleric spells:
   - name: Bless
     level: 1
     ongoing: true
+    modifier: -1 to Cast a Spell
     text: Your deity smiles upon a combatant of your choice. They take +1 ongoing so long as battle continues and they stand and fight. While this spell is ongoing you take -1 to cast a spell.
   - name: Cure Light Wounds
     level: 1
     ongoing: false
     text: At your touch wounds scab and bones cease to ache. Heal an ally you touch of 1d8 damage.
+    procedure: roll 1d8
   - name: Detect Alignment
     level: 1
     ongoing: false
@@ -1068,6 +1093,7 @@ cleric spells:
   - name: Cause Fear
     level: 1
     ongoing: true
+    modifier: -1 to Cast a Spell
     text: >
       Choose a target you can see and a nearby object.
       The target is afraid of the object so long as you maintain the spell.
@@ -1077,10 +1103,12 @@ cleric spells:
   - name: Magic Weapon
     level: 1
     ongoing: true
+    modifier: -1 to Cast a Spell
     text: The weapon you hold while casting does +1d4 damage until you dismiss this spell. While this spell is ongoing you take -1 to cast a spell.
   - name: Sanctuary
     level: 1
     ongoing: false
+    modifier: +1d4 to healing in the sanctuary
     text: As you cast this spell, you walk the perimeter of an area, consecrating it to your deity. As long as you stay within that area you are alerted whenever someone acts with malice within the sanctuary (including entering with harmful intent). Anyone who receives healing within a sanctuary heals +1d4 HP.
   - name: Speak With Dead
     level: 1
@@ -1089,6 +1117,7 @@ cleric spells:
   - name: Animate Dead
     level: 3
     ongoing: true
+    modifier: -1 to Cast a Spell
     text: >
       You invoke a hungry spirit to possess a recently-dead body and serve you. This creates a zombie that follows your orders to the best of its limited abilities. Treat the zombie as a character, but with access to only the basic moves. It has a +1 modifier for all stats and 1 HP. The zombie also gets your choice of 1d4 of these traits:
         * It’s talented. Give one stat a +2 modifier.
@@ -1096,13 +1125,17 @@ cleric spells:
         * It has a functioning brain and can complete complex tasks.
         * It does not appear obviously dead, at least for a day or two.
       The zombie lasts until it is destroyed by taking damage in excess of its HP, or until you end the spell. While this spell is ongoing you take -1 to cast a spell.
+    procedure:
+      - create zombie helper
   - name: Cure Moderate Wounds
     level: 3
     ongoing: false
     text: You staunch bleeding and set bones through magic. Heal an ally you touch of 2d8 damage.
+    procedure: roll 2d8
   - name: Darkness
     level: 3
     ongoing: true
+    modifier: -1 to Cast a Spell
     text: >
       Choose an area you can see: it’s filled with supernatural darkness and shadow. While this spell is ongoing you take -1 to cast a spell.
   - name: Resurrection
@@ -1123,6 +1156,7 @@ cleric spells:
     level: 5
     ongoing: false
     text: Heal an ally you touch of 3d8 damage
+    procedure: roll 3d8
   - name: Divination
     level: 5
     ongoing: false
@@ -1379,14 +1413,14 @@ playbooks:
           type: race
           text: You descend from an ancient martial tradition. Gain +1 to spout lore on anything related to warfare.
           trigger: instant
-          procedure: take +1 ongoing to moveName = (spout lore) and it relates to warfare
+          procedure: take 1 ongoing when moveName = "Spout Lore" and it relates to warfare
       - name: Human
         move:
           name: Human
           type: race
           text: Your fighting style is showy and impressive. Gain +1 forward to parley with anyone who has seen you fight.
           trigger: After someone saw you fight.
-          procedure: take +1 forward to parley and you saw them fight
+          procedure: take 1 forward to Parley when you saw them fight
     alignment options:
       - name: good
         goal: Slay a menace to the innocent.
@@ -1417,7 +1451,7 @@ playbooks:
             * On a 7-9, deal your damage and apply 1 technique, and your opponent attacks you.
         trigger: When you attempt to incorporate magic into a melee attack
         procedure:
-          roll roll+int:
+          roll +int:
             success:
               apply techniques to: deal damage
             partial success:
@@ -1436,12 +1470,11 @@ playbooks:
           - choose Do they accept?:
               yes: do nothing
               no:
-                roll roll+cha:
+                roll +cha:
                   success: choose 2
                   partial success: choose 1
           - options:
-              # TODO inapplicable modifier
-              You take +1 ongoing against them until they defeat you: take +1 ongoing against them until they defeat you
+              You take +1 ongoing against them until they defeat you: take 1 ongoing against them until they defeat you
               They lose the respect of their peers and underlings: They lose the respect of their peers and underlings
               They retreat: They retreat
       - name: The Riddle of Steel
@@ -1453,9 +1486,8 @@ playbooks:
               * What is this person trying to hide?
         trigger: When you cross swords with a humanoid opponent
         procedure:
-          - take +1 forward to moveName = "discern realities" and against a humanoid opponent you crossed sword with
-          # TODO inapplicable modifier
-          - take +[What is this person about to do?, What emotion drives this person?, What is this person trying to hide?] forward to discern realities options against them
+          - take 1 forward when moveName = "Discern Realities" and against a humanoid opponent you crossed swords with
+          - take [What is this person about to do?, What emotion drives this person?, What is this person trying to hide?] forward to options when move = "Discern Realities" and against them
       - name: Student of the Blade
         type: starting
         text: Begin play with 4 techniques.
@@ -1478,8 +1510,8 @@ playbooks:
               Do not apply any techniques.
         trigger: When you attack at near range with blades of cutting air
         procedure:
-          roll roll+int:
-            success: 
+          roll +int:
+            success:
               apply techniques to: deal damage
             partial success:
               choose:
@@ -1492,16 +1524,14 @@ playbooks:
       - name: To The Death
         type: advanced
         text: You have +1 armor against any opponent that you have challenged to a duel.
-        trigger: constant
-        # TODO inapplicable modifier
-        procedure: take +1 to armor ongiong on you have challenged them to a duel.
+        trigger: instance
+        procedure: take 1 to armor ongiong when you have challenged them to a duel.
       - name: Floating Step
         type: advanced
         text: When you get a 10+ with arcane bladework, take +1 forward to any defy danger rolls to navigate the battlefield.
-        # TODO illegal trigger
-        trigger: on "Arcane Bladework".roll>=10
-        # TODO inapplicable modifier
-        procedure: take +1 forward to any defy danger to navigate the battlefields
+        trigger: instant
+        # TODO modify procedures
+        procedure: take 1 forward when moveName = "Defy Danger" and navigating the battlefields
       - name: Know Your Enemy
         type: advanced
         text: >
@@ -1513,12 +1543,12 @@ playbooks:
               Gain a key insight into your rival’s fighting style.
         trigger: When you re-encounter somebody who has wronged you
         procedure:
-          - roll roll+int:
+          - roll +int:
               success: choose 2
               patrial success: choose 1
           - options:
               Taunt your rival into revealing something they did not mean to.: Taunt your rival into revealing something they did not mean to.
-              Take +1 forward against your rival.: take +1 forward on against the rival you taunted
+              Take +1 forward against your rival.: take 1 forward when against the rival you taunted
               Gain a key insight into your rival’s fighting style.: Gain a key insight into your rival’s fighting style.
       - name: Flawless Bladework
         type: advanced
@@ -1529,7 +1559,7 @@ playbooks:
           * On a 7-9, deal your damage and apply 1 techniques, and your opponent attacks you.
         trigger: When you attempt to incorporate magic into a melee attack
         procedure: 
-          roll roll+int:
+          roll +int:
             success:
               apply 2 techniques to: deal damage
             patrial success:
@@ -1550,7 +1580,7 @@ playbooks:
               The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest
         trigger: When you attempt to wow an audience with a display of your power
         procedure:
-          roll roll+int:
+          roll +int:
             success: choose 2
             partial success: choose 1
           options:
@@ -1559,7 +1589,7 @@ playbooks:
             The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest:
               - The performance does not fatigue you, causing -1 ongoing to all rolls to use techniques until you have a chance to rest
               # TODO inapplicable modifier
-              - dont: take -1 ongoing to using techniques until rest
+              - dont take -1 ongoing when using techniques until you've rested
         # TODO multi-class move
       - name: Multilass Dabbler
         type: advanced
@@ -1578,8 +1608,8 @@ playbooks:
         trigger: intstant
         procedure:
           # TODO inapplicable modifier
-          - take +1 to armor ongoing
-          - take +1 to armor ongiong against any opponent that you have challenged to a duel.
+          - take 1 ongoing to armor
+          - take 1 ongiong to armor when against an opponent that you have challenged to a duel.
       - name: Master’s Bladework
         type: advanced
         replaces: Flawless Bladework
@@ -1589,7 +1619,7 @@ playbooks:
             * On a 7-9, deal your damage and apply 2 technique, and your opponent attacks you.
         trigger: When you attempt to incorporate magic into a melee attack
         procedure:
-          roll roll+int:
+          roll +int:
             success:
               apply 3 techniques to: deal damage
             patrial success:
@@ -1606,7 +1636,7 @@ playbooks:
               - Do not apply any techniques
         trigger: When you attack at near range with blades of cutting air
         procedure:
-          roll roll+int:
+          roll +int:
             success:
               apply 2 techniques to: deal damage
             partial success:
@@ -1623,7 +1653,7 @@ playbooks:
         text: You move with inhuman grace and are capable of leaping distances that would be impossible for mere mortals. In addition, when you get a 10+ with arcane bladework, take +1 ongoing to any defy danger rolls to navigate the battlefield until the battle ends.
         trigger: on arcane bladework.roll >= 10
         # TODO inapplicable modifier
-        procedure: take +1 ongoing to moveName = Defy Danger and to navigate the battlefield until the battle ends
+        procedure: take +1 ongoing to moveName = "Defy Danger" and to navigate the battlefield until the battle ends
       - name: Steel Tells No Lies
         type: advanced
         replaces: Know Your Enemy
@@ -1636,13 +1666,13 @@ playbooks:
               - The nature of their fighting style is laid bare before you; hold 1 to perform a move from it that you have seen.
         trigger: When you re-encounter somebody who has wronged you
         procedure:
-          - roll roll+int:
+          - roll +int:
               success: choose 2
               patrial success: choose 1
           - options:
               Gain a flash of insight as to what your rival is thinking at this very moment.: Gain a flash of insight as to what your rival is thinking at this very moment.
               Take +1 forward against your rival and, if you could already see them, you realize a way to isolate them and yourself from anyone who would interfere with your duel.:
-                  - take +1 forward on against the person who wronged you
+                  - take 1 forward when against the person who wronged you
                   - choose could you already see them:
                       yes: you realize a way to isolate them and yourself from anyone who would interfere with your duel.
                       no: do nothing
@@ -1657,7 +1687,7 @@ playbooks:
             * On a miss, somebody has a bone to pick with you.
         trigger: When you enter a settlement for the first time
         procedure:
-          roll roll+cha:
+          roll +cha:
             success: you are recognized for your deeds and the common people either welcome you with open arms or acquiesce to your demands with fear as appropriate.
             partial success: your name gets you a meeting with anyone but no guaranteed favors.
             miss: somebody has a bone to pick with you.
@@ -1757,15 +1787,13 @@ playbooks:
           * Fame and glory
         trigger: instant
         procedure:
-          - add choice 2 for appetites from appetite options to appetites
+          - add (choice 2 for appetites from appetite options) to appetites
       The Upper Hand:
         text: >
           You take +1 ongoing to last breath rolls. When you take your last breath, on a 7–9 you make an offer to Death in return for your life. If Death accepts he will return you to life. If not, you die.
         trigger: constant
         procedure: 
-          - take +1 ongoing to moveName = Last Breath
-          # TODO inapplicable modifier
-          - take +[] ongoing to moveName = Last Breath
+          - take 1 ongoing when moveName = Last Breath
       Musclebound:
         text: >
           While you wield a weapon it gains the forceful and messy tags.
@@ -1779,11 +1807,10 @@ playbooks:
           * On a 7–9 only a few (the weakest or most foolhardy among them) fall prey to your taunting.
         trigger: When you cry out a challenge to your enemies
         procedure: 
-          roll roll+Con:
+          roll +Con:
             success:
               - They treat you as the most obvious threat to be dealt with and ignore your companions.
-              # TODO inapplicable modifier
-              - take +2 to damage and against them
+              - take 2 to damage when against them
           patrial success: Only a few (the weakest or most foolhardy among them) fall prey to your taunting.
     moves 2-5:
       - name: Still Hungry
@@ -1948,7 +1975,7 @@ playbooks:
           title: text with recommendations from title options
         character fields:
           <<: *description-character-fields
-          title: start as title choice
+          title: title choice
       roll:
         <<: *roll
         global fields:
@@ -1964,7 +1991,7 @@ playbooks:
           <<: *roll-choices
         character fields:
           <<: *roll-character-fields
-          appetites: start as []
+          appetites: []
         formulas:
           <<: *roll-formulas
           roll: "(input boolean are you pursuing an appetite?) ? d6+d8 : 2d6"
