@@ -29,62 +29,64 @@ mechanisms: &mechanisms
       sick: false
       stunned: false
       confused: false
-    formulas: &roll-formulas
       scarred: false
+    formulas: &roll-formulas
       str (number): (modifier for strength) + (weak modifier)
       dex (number): (modifier for dexterity) + (shakey modifier)
       con (number): (modifier for constitution) + (sick modifier)
       int (number): (modifier for intelligence) + (stunned modifier)
       wis (number): (modifier for wisdom) + (confused modifier)
       cha (number): (modifier for charisma) + (scarred modifier)
-      "modifier for <number:stat> (number)":
+      modifier for <number:stat> (number):
         switch stat:
-          "0..8":  -1
-          "9..12":  0
-          "13..15": 1
-          "16..17": 2
-          "18..20": 3
-      "<boolean:debility> modifier (number)": "debility ? (-1) : 0"
+          0..8:  -1
+          9..12:  0
+          13..15: 1
+          16..17: 2
+          18..20: 3
+      <boolean:debility> modifier (number): "debility ? (-1) : 0"
+      baseroll: 2d6
     procedures: &roll-procedures
       roll <number> {options}:
         switch number:
-          "1..6": 
+          1..6:
             - add 1 to xp
             - either:
               - options.miss
               - options.failure
-              - Oh oh... The GM will tell you what just happened, but at least you got XP!
-          "7..9": [options.partial success, options.hit]
-          "10..15": [options.success, options.hit]
+              - Oh oh... The GM will tell you what just happened, but at least you got xp!
+          7..9: [options.partial success, options.hit]
+          10..15: [options.success, options.hit]
       roll +<number> {options}:
-        roll 2d6+number: options
+        roll baseroll+number: options
       roll {options}:
-        roll 2d6: options
+        roll baseroll: options
       take a debility:
         choose which debility do you want to take:
-          Weak: set weak = true
-          Shakey: set shakey = true
-          Sick: set sick = true
-          Stunned: set stunned = true
-          Confused: set confused = true
-          Scarred: set scarred = true
+          weak: set weak = true
+          shakey: set shakey = true
+          sick: set sick = true
+          stunned: set stunned = true
+          confused: set confused = true
+          scarred: set scarred = true
       remove a debility:
         choose which debility do you want to remove:
-          Weak: set weak = false
-          Shakey: set shakey = false
-          Sick: set sick = false
-          Stunned: set stunned = false
-          Confused: set confused = false
-          Scarred: set scarred = false
-      "take <number:mod> forward": modify 1 times turn x into x + mod
-      "take <number:mod> ongoing": modify turn x into x + mod
-      "take <number:mod> forward when <string:filter>": modify when filter 1 times turn x into x + mod
-      "take <number:mod> ongoing when <string:filter>": modify when filter turn x into x + mod
-      "take <number:mod> forward to <string:filter>": modify filter 1 times
-      "take <number:mod> ongoing to <string:filter>": modify filter turn x into x + mod
-      "take <number:mod> forward to <string:target> when <string:filter>": modify target when filter 1 times turn x into x + mod
-      "take <number:mod> ongoing to <string:target> when <string:filter>": modify target when filter turn x into x + mod
-      "take <number:mod> ongoing while <string:filter>": modify while filter turn x into x + mod
+          weak: set weak = false
+          shakey: set shakey = false
+          sick: set sick = false
+          stunned: set stunned = false
+          confused: set confused = false
+          scarred: set scarred = false
+      take <number:mod> forward: modify baseroll 1 times from x to x + mod
+      take <number:mod> ongoing: modify baseroll from x to x + mod
+      take <number:mod> forward <%text:filter%>: modify baseroll, filter 1 times from x to x + mod
+      take <number:mod> ongoing <%text:filter%>: modify baseroll, filter from x to x + mod
+      take <number:mod> forward to <%text:filter%>: modify filter 1 times from x to x + mod
+      take <number:mod> ongoing to <%text:filter%>: modify filter from x to x + mod
+      take <number:mod> ongoing while <%text:limit%>: modify baseroll while limit from x to x + mod
+      take <number:mod> ongoing until <%text:limit%>: modify baseroll until limit from x to x + mod
+      take <number:mod> ongoing to <%text:filter%> while <%text:limit%>: modify filter while limit from x to x + mod
+      take <number:mod> ongoing to <%text:filter%> until <%text:limit%>: modify filter until limit from x to x + mod
   moves: &moves
     types:
       move:
@@ -104,9 +106,9 @@ mechanisms: &mechanisms
     formulas:
       moves 2-10: moves 2-5 join moves 6-10
     procedures: &moves-procedures
-      trigger <moveName>:
-        - define move to be first move in moves where move.name = moveName
-        - define moveType to be move.type
+      trigger <move name>:
+        - define move to be first move in moves where move.name = move name
+        - define move type to be move.type
         - execute move.procedure
       gain <move>:
         - add move to moves
@@ -114,18 +116,19 @@ mechanisms: &mechanisms
             yes: trigger move.name
             no: do nothing
       gain advanced move:
-        is level<6:
+        is level < 6:
           yes: gain choice for new move from moves 2-5
           no: gain choice for new move from moves 2-10
     hooks: &moves-hooks
       on initialization over:
         for move in starting moves: gain move
       on change over:
+        for move in moves where move.trigger is constant: trigger move.name
         for move in moves where ((move.trigger starts with on) and ((part 3..end of move.trigger) as boolean)): trigger move.name
   expirience: &expirience
     character fields: &expirience-character-fields
-      level: 1 allow 1-20
-      xp: 0 allow 0-inf
+      level: 1 allow 1...20
+      xp: 0 allow 0...
     formulas:
       level up allowed: (level + 7) <= xp
   holds: &holds
@@ -134,12 +137,12 @@ mechanisms: &mechanisms
     character fields: &holds-character-fields
       holds: []
     procedure: &holds-procedures
-      "hold <number:count=1> <string:name=hold> {options}":
+      hold <number:count=1> <string:name=hold> {options}:
         repeat count times: add {name,options} to holds
-      "spend a <string:name=hold> to {options}":
+      spend a <string:name=hold> to {options}:
         for hold in holds where hold.name = name:
           set hold.options = options
-      spend <name=hold>:
+      spend <name>:
         - define hold to be first hold in holds where hold.name = name
         - execute choice for use hold from hold.options
         - remove hold from holds
@@ -148,35 +151,34 @@ mechanisms: &mechanisms
       damage: formula
       max hp: formula
     character fields: &damage-character-fields
-      hp: max hp allow 0-max hp
-      armor: 0 allow 0-inf
+      hp: max hp allow 0...max hp
+      armor: 0 allow 0...
     procedures: &damage-procedures
       deal <formula:damage>:
         is ignores armor:
-          yes: show `damage`, ignores armor
+          yes: show `damage`, ignores armor under damage
           no:
             is piercing != 0:
-              yes: show `damage`, `piercing` piercing
-              no: show `damage`
+              yes: show `damage`, `piercing` piercing under damage
+              no: show damage under damage
       take damage:
         is (boolean input ignore armor?):
-          yes: "take (number input damage) damage ignores armor"
-          no: "take (number input damage) damage with (number input piercing) piercing"
+          yes: take (number input damage) damage ignores armor
+          no: take (number input damage) damage with (number input piercing) piercing
       take <number> damage [ignores armor]:
         is ignores armor:
-          yes: "take number damage ignores armor"
-          no: "take number damage with (number input piercing) piercing"
+          yes: take number damage ignores armor
+          no: take number damage with (number input piercing) piercing
       take <number> damage [ignores armor] with <number:piercing=0> piercing:
-        - "reduce hp by number - (ignores armor ? 0 : max of 0 and (armor - piercing))"
-        - is hp<=0:
+        - is ignores armor:
+          yes: set hit = number
+          no: set hit = number - (max of 0 and (armor - piercing))
+        - reduce hp by hit
+        - is hp = 0:
           yes:
-            - set hp = 0
+            - trigger Last Breath
           no: do nothing
-      heal <number>:
-        - add number to hp
-        - is hp>=maxHP:
-          yes: set hp = maxHP
-          no: do nothing
+      heal <number>: add number to hp
   race: &race
     types: &race-types
       race: { name: text, move: move }
@@ -185,7 +187,7 @@ mechanisms: &mechanisms
     choices: &race-choices
       race: from race options
     hooks:
-      on initialization over: add race choice.move to moves
+      on initialization over: add race.move to moves
   alignment: &alignment
     types: &alignment-types
       alignment: { name: text, goal: text }
@@ -194,7 +196,7 @@ mechanisms: &mechanisms
     choices: &alignment-choices
       alignment: from alignment options
     formulas:
-      alignment met (boolean): boolean input Did you `alignment.goal`?
+      alignment met (boolean): boolean input did you `alignment.goal`?
   bonds: &bonds
     playbook fields: &bonds-playbook-fields
       bond options: text array
@@ -203,12 +205,12 @@ mechanisms: &mechanisms
     formula:
       bond: number of bonds where bond contains (text input character name)
     procedures: &bonds-procedures
-      add bond: add (choice for add bond from bond options) to bonds
+      add bond: add (text input bond with recommendations from bond options) to bonds
       resolve bond: remove (choice for remove bond from bonds) from bonds
   equipment: &equipment
     types: &equipment-types
-      tag: { tag: text, description: text, init: procedure, usage: procedure }
-      equipment: { name: text, description: text, tags: tag array, weight: number, cost: number }
+      tag: { tag: pattern, description: text, init: procedure, usage: procedure }
+      equipment: { name: text, description: text, tags: text array, weight: number, cost: number }
     global fields: &equipment-global-fields
       tags: large
       equipment: large
@@ -216,24 +218,30 @@ mechanisms: &mechanisms
       load: formula
       starting gear options: equipment array array array # options for choices between arrays of equipment
     choices: &equipment-choices
-      gear: from starting gear options
+      starting gear: from starting gear options
     character fields: &equipment-character-fields
+      gear: starting gear
       ignored tags: []
       weapons: []
       armors: []
     formulas:
       weight: sum of (equipment.weight for equipment in gear)
+      encumbrance modifier: "weight > load ? (weight > load + 2 ? -6 : -1) : 0"
     procedures: &equipment-procedures
-      use <amount=1> tagged <tag>:
+      earn <equipment>:
+        - add equipment to gear
+        - for tag name in equipment.tags where tag name not in ignored tags:
+          execute (first tag in tags where tag name match tag.tag).init
+      use <amount=1> gear tagged <tag>:
         for equipment in (choice amount for use from (for equipment in gear where tag in equipment.tags)):
-          for tagName in equipment.tags where tagName not in ignored tags:
-            execute (first tag in tags where tagName match tag.tag).procedure
+          for tag name in equipment.tags where tag name not in ignored tags:
+           execute (first tag in tags where tag name match tag.tag).usage
       use <amount=1> <text:name>:
         for equipment in (choice amount for use from (for equipment in gear where equipment.name = name)):
-          for tagName in equipment.tags where tagName not in ignored tags:
-            execute (first tag in tags where tagName match tag.tag).procedure
+          for tag name in equipment.tags where tag name not in ignored tags:
+            execute (first tag in tags where tag name match tag.tag).usage
       ignore tag <tag>: add tag.name to ignored tags
-      aknoledge tag <tag>: remove tag.name to ignored tags
+      aknoledge tag <tag>: remove tag.name from ignored tags
       equip <text:name>:
         - define equiped = first equipment in gear where equipment.name = name
         - if "weapon" in equiped.tags: add equiped to weapons
@@ -242,6 +250,18 @@ mechanisms: &mechanisms
         - define equiped = first equipment in gear where equipment.name = name
         - if "weapon" in equiped.tags: remove equiped from weapons
         - if "armor" in equiped.tags: remove equiped from armors
+  hirelings:
+    types:
+      hireling:
+        name: text
+        loyalty: number
+        adept: number
+        burgler: number
+        minstrel: number
+        priest: number
+        protector: number
+        tracker: number
+        warrior: number
 basic moves:
   - name: Hack and Slash
     type: basic
@@ -253,7 +273,7 @@ basic moves:
     procedure:
       roll +str:
         success:
-          choose do +1d6 damage but expose yourself to the enemy’s attack?:
+          choose Do +1d6 damage but expose yourself to the enemy’s attack?:
             yes: [deal damage+1d6, take damage]
             no: deal damage
         partial success: [deal damage, take damage]
@@ -271,10 +291,11 @@ basic moves:
       roll +dex:
         hit: deal damage
         partial success:
-          choose:
-            You have to move to get the shot placing you in danger as described by the GM.: You have to move to get the shot placing you in danger as described by the GM.
-            You have to take what you can get, -1d6 damage.: take -1d6 forward to damage
-            You have to take several shots, reducing your ammo by one.: use gear tagged ammo
+          - choose:
+              You have to move to get the shot placing you in danger as described by the GM.: You have to move to get the shot placing you in danger as described by the GM.
+              You have to take what you can get, -1d6 damage.: take -1d6 forward to damage
+              You have to take several shots, reducing your ammo by one.: use gear tagged ammo
+          - deal damage
   - name: Defy Danger
     type: basic
     text: >
@@ -314,14 +335,14 @@ basic moves:
     trigger: When you stand in defense of a person, item, or location under attack
     procedure:
       - roll +con:
-          success: hold 3
-          partial success: hold 1
-      - use:
+          success: hold 3 defence
+          partial success: hold 1 defence
+      - spend a defence to:
           Redirect an attack from the thing you defend to yourself.: Redirect an attack from the thing you defend to yourself.
           Halve the attack’s effect or damage.: Halve the attack’s effect or damage.
           Open up the attacker to an ally giving that ally +1 forward against the attacker.:
             choose Is the ally you?:
-              yes: take 1 forward when against the attacker
+              yes: take 1 forward against the attacker
               no: do nothing
           Deal damage to the attacker equal to your level.: deal level/2
   - name: Spout Lore
@@ -362,7 +383,7 @@ basic moves:
           - What here is useful or valuable to me?
           - Who’s really in control here?
           - What here is not what it appears to be?
-      - take 1 forward when acting on the answers
+      - take 1 forward acting on the answers
   - name: Parley
     type: basic
     text: >
@@ -384,12 +405,11 @@ basic moves:
     trigger: When you help or hinder someone you have a bond with
     procedure:
       roll +bond:
-        success:
+        hit:
           choose wether they take +1 or -2:
             They take +1: They take +1
             They take -2: They take -2
-        partial success also: You expose yourself to danger, retribution, or cost.
-# DONE to here
+        partial success: You expose yourself to danger, retribution, or cost.
 special moves:
   - name: Last Breath
     type: special
@@ -402,14 +422,14 @@ special moves:
     trigger: on hp=0
     procedure:
       - You catch a glimpse of what lies beyond the Black Gates of Death’s Kingdom (the GM will describe it).
-      - roll roll:
+      - roll:
           success:
             - set hp = 1
             - You’ve cheated Death — you’re in a bad spot but you’re still alive.
           partial success:
-            choose death himself offers you a bargain:
+            choose Death himself offers you a bargain:
               Take Death’s bargain and stabilize: set hp = 1
-              Don’t take Death’s bargain and pass beyond the Black Gates into whatever fate awaits you: die
+              Refuse and pass beyond the Black Gates into whatever fate awaits you: die
           miss: die
   - name: Encumbrance
     type: special
@@ -420,7 +440,7 @@ special moves:
       * Less than or equal to your load+2, you take -1 ongoing until you lighten your burden
       * Greater than your load+2, you have a choice: drop at least 1 weight and roll at -1, or automatically fail
     trigger: instant
-    procedure: "modify roll into roll + (weight > load ? (weight > load + 2 ? -6 : -1) : 0)"
+    procedure: modify baseroll from x to x + encumbrance modifier
   - name: Make Camp
     type: special
     text: >
@@ -450,7 +470,7 @@ special moves:
         roll +wis:
           success:
             - You’re able to wake the camp and prepare a response
-            - take 1 forard
+            - take 1 forward
           partial success: You react just a moment too late; your companions in camp are awake but haven’t had time to prepare. They have weapons and armor but little else.
           miss: Whatever lurks outside the campfire’s light has the drop on you.
   - name: Undertake a Perilous Journey
@@ -547,9 +567,9 @@ special moves:
     procedure:
     - choose How much do you spend?:
         100 coins (roll+0): use gear 100 coin
-        200 coins (roll+1): [use gear 200 coin, take 1 forward to roll]
-        300 coins (roll+2): [use gear 300 coin, take 2 forward to roll]
-        400 coins (roll+3): [use gear 400 coin, take 3 forward to roll]
+        200 coins (roll+1): [use gear 200 coin, take 1 forward]
+        300 coins (roll+2): [use gear 300 coin, take 2 forward]
+        400 coins (roll+3): [use gear 400 coin, take 3 forward]
     - roll:
         success: choose 3
         partial success: choose 1
@@ -605,14 +625,14 @@ special moves:
       - choose Do you make it known what you’re setting out to do?: { yes: take 1 forward, no: do nothing }
       - choose Do you make it known that they’ll get a share of whatever you find?: { yes: take 1 forward, no: do nothing }
       - choose Do you have a useful reputation around these parts?: { yes: take 1 forward, no: do nothing }
-      - roll:
+      - roll: # Add hireling creation here
           success: You’ve got your pick of a number of skilled applicants, your choice who you hire, no penalty for not taking them along.
           partial success: You’ll have to settle for someone close to what you want or turn them away.
           miss:
             - Someone influential and ill-suited declares they’d like to come along (a foolhardy youth, a loose-cannon, or a veiled enemy, for example), bring them and take the consequences or turn them away. If you turn away applicants you take -1 forward to recruit.
             - choose Bring them along or turn them away?:
                 Bring them along: Bring them along
-                Turn them away: take -1 when moveName = Recruit
+                Turn them away: take -1 forward move name = Recruit
   - name: Outstanding Warrants
     type: special
     text: >
@@ -639,9 +659,9 @@ special moves:
     trigger: When you spend your leisure time in study, meditation, or hard practice
     procedure:
       choose If you prepare for:
-        Between a week and a month: hold 3
-        More then a month: hold 1
-      use: take 1 forward
+        Between a week and a month: hold 3 preparation
+        More then a month: hold 1 preparation
+      spend preparation: take 1 forward
 tags:
   - tag: Applied
     description: It’s only useful when carefully applied to a person or to something they eat or drink.
@@ -661,33 +681,33 @@ tags:
     description: It takes two hands to use it effectively.
   - tag: Worn
     description: To use it, you have to be wearing it.
-  - tag: <formula> when <trigger>
+  - tag: take <formula> to <trigger>
     description: It modifies your effectiveness in a specified situation. It might be “+1 forward to spout lore” or “-1 ongoing to hack and slash.”
-    usage: take formula when trigger
+    usage: take formula to trigger
   - tag: <number:uses> uses
     description: It can only be used n times.
-    init: define this.uses = uses
+    init: set equipment.uses = uses
     usage:
-      - remove 1 from this.uses
+      - remove 1 from equipment.uses
       - is uses < 0:
-          yes: remove this from gear
+          yes: remove equipment from gear
   - tag: use twice
     description: Use two every time.
     usage:
       - remove 1 from uses
-      - is uses<0:
-          yes: remove this from gear
+      - is uses < 0:
+          yes: remove equipment from gear
   - tag: <number:ammo> ammo
     description: It counts as ammunition for appropriate ranged weapons. The number indicated does not represent individual arrows or sling stones, but represents what you have left on hand.
-    init: define this.ammo = ammo
+    init: set equipment.ammo = ammo
     usage:
       is ammo = 0:
-        yes: remove this from gear
+        yes: remove equipment from gear
   - tag: Forceful
     description: It can knock someone back a pace, maybe even off their feet.
   - tag: <formula> damage
     description: It is particularly harmful to your enemies. When you deal damage, you add n to it.
-    usage: take formula to damage
+    usage: take formula ongoing to damage
   - tag: Ignores Armor
     description: Don’t subtract armor from the damage taken.
     usage: set ignores armor = yes
@@ -716,22 +736,22 @@ tags:
   - tag: Far
     description: It’s useful for attacking something in shouting distance.
   - tag: <number> armor
-    description: This is missing # TODO
+    description: This is your basic protection and armor.
     usage: modify armor = number
-  - tag: <number> armor
-    description: It goes right through armor. When you deal damage with n piercing, you subtract n from the enemy’s armor for that attack.
+  - tag: +<number> armor
+    description: An additional protection beyond your basic armor.
     usage: take +number ongoing to armor
   - tag: Clumsy
     description: It’s tough to move around with. -1 ongoing while using it. This penalty is cumulative.
-    usage: take -1 ongoing to all
-  - tag: On use <procedure>
+    usage: take -1 ongoing
+  - tag: on use <procedure>
     usage: <procedure>
 equipment:
   - &coin
     name: coin
     tags: []
     cost: 1
-    weight: 0
+    weight: 0.01
   - &Ragged_Bow
     name: Ragged Bow
     tags: [Near]
@@ -885,13 +905,13 @@ equipment:
     description: Adventuring gear is a collection of useful mundane items such as chalk, poles, spikes, ropes, etc. When you rummage through your adventuring gear for some useful mundane item, you find what you need and mark off a use.
   - &Bandages
     name: Bandages
-    tags: [3 uses, slow, On use choose are you healing yourself: { yes: heal 4, no: do nothing }]
+    tags: [3 uses, slow, on use choose Are you healing yourself: { yes: heal 4, no: do nothing }]
     cost: 5
     weight: 0
     description: When you have a few minutes to bandage someone else’s wounds, heal them of 4 damage and expend a use.
   - &Poultices_and_Herbs
     name: Poultices and Herbs
-    tags: [2 uses, slow, On use choose are you healing yourself: { yes: heal 7, no: do nothing }]
+    tags: [2 uses, slow, on use choose Are you healing yourself: { yes: heal 7, no: do nothing }]
     cost: 10
     weight: 1
     description: When you carefully treat someone’s wounds with poultices and herbs, heal them of 7 damage and expend a use.
@@ -899,7 +919,7 @@ equipment:
     name: Healing Potion
     tags:
       - 1 uses
-      - On use choose are you healing yourself:
+      - on use choose Are you healing yourself:
           yes:
             choose are you removeing a debility or healing yourself:
               removeing a debility: remove a debility
@@ -910,13 +930,13 @@ equipment:
     description: When you drink an entire healing potion, heal yourself of 10 damage or remove one debility, your choice.
   - &Keg_of_Dwarven_Stout
     name: Keg of Dwarven Stout
-    tags: [1 uses, On use take +1 forward on Carouse]
+    tags: [1 uses, on use take +1 forward Carouse]
     cost: 10
     weight: 4
     description: When you open a keg of dwarven stout and let everyone drink freely, take +1 to your Carouse roll. If you drink a whole keg yourself, you are very, very drunk.
   - &Bag_of_Books
     name: Bag of Books
-    tags: [5 uses, On use take +1 forward on Spout Lore]
+    tags: [5 uses, on use take +1 forward Spout Lore]
     cost: 10
     weight: 2
     description: When your bag of books contains just the right book for the subject you’re spouting lore on, consult the book, mark off a use, and take +1 to your roll.
@@ -952,7 +972,7 @@ equipment:
     description: Only the greatest of elf-friends are treated to this rare delicacy.
   - &Halfling_Pipeleaf
     name: Halfling Pipeleaf
-    tags: [6 uses, use twice, On use take +1 forward to Parley]
+    tags: [6 uses, use twice, on use take +1 forward to Parley]
     cost: 5
     weight: 0
     description: When you share halfling pipeleaf with someone, expend two uses and take +1 forward to parley with them.
@@ -1392,11 +1412,11 @@ wizard spells:
     text: You teleport a creature to your presence. Name a creature or give a short description of a type of creature. If you named a creature, that creature appears before you. If you described a type of creature, a creature of that type appears before you.
 playbooks:
   arcane duelist:
-    in a sentence: A warrior that incorperates magic into his fighting style
+    in a sentence: A skilled swordfighter who infuses their blade with arcane power to deal devastating attacks and manipulate the battlefield.
     introduction: >
-      Battle is not a means to an end: It is an art.\n
-      Where others see nothing but chaos and desperation, you refine an inner poetry of steel and fire that they cannot hope to comprehend, much less match.\n
-      If you are lucky, you may find a rival able to match your skill.\n
+      Battle is not a means to an end: It is an art.
+      Where others see nothing but chaos and desperation, you refine an inner poetry of steel and fire that they cannot hope to comprehend, much less match.
+      If you are lucky, you may find a rival able to match your skill.
       But even these brief connections can end only in victory defeat: The path you walk is ultimately lonely, but it is yours.
     name options: [Elohiir, Sharaseth, Hasrith, Shevaral, Cadeus, Eldar, Kithracet, Thelian, Yang, Garm, Caleb, Maximillian, Alexander, La Croix, Rodriguez, Scyld]
     look options:
@@ -1725,15 +1745,15 @@ playbooks:
         character fields:
           aquired techniques: []
   barbarian:
-    in a sentence: A warrior from outside society in some infinite search
+    in a sentence: A fierce and resilient warrior who relies on their physical prowess and raw instincts to overcome their enemies and survive in the harshest of environments.
     introduction: >
-      Hither you came from parts unknown. Sword in hand—a reaver. A slayer.\n
-      Let the wizard casts his spells. What good is magic when steel cuts through flesh and bone just the same?\n
-      The Paladin swears fealty to the divine. She can keep her fairy tale god—you are your own master.\n
-      You hail from the far reaches of Dungeon World in search of—what? Glory? Treasure? Spilt blood?\n
-      In the end it matters not.\n
-      They call you barbarian. Uncivilized. Let them. You know better.\n
-      Their world of nobles and laws is fleeting.\n
+      Hither you came from parts unknown. Sword in hand—a reaver. A slayer.
+      Let the wizard casts his spells. What good is magic when steel cuts through flesh and bone just the same?
+      The Paladin swears fealty to the divine. She can keep her fairy tale god—you are your own master.
+      You hail from the far reaches of Dungeon World in search of—what? Glory? Treasure? Spilt blood?
+      In the end it matters not.
+      They call you barbarian. Uncivilized. Let them. You know better.
+      Their world of nobles and laws is fleeting.
       You know what is best in life.
     name options: [Gorm, Si-Yi, Priscilla, Sen, Xia, Anneira, Haepha, Lur, Shar, Korrin, Nkosi, Fafnir, Qua, Sacer, Vercin’geto, Barbozar, Clovis, Frael, Thra raxes, Sillius, Sha Sheena, Khamisi]
     title options: [the Glorious, the Hungry, the Irascible, the Undefeated, the Gluttonous, Foesmasher, Bonebreaker, the Mirthful, the Melancholic, All Mighty, the Giant, the Triumphant]
@@ -2029,11 +2049,11 @@ playbooks:
             - for move in starting moves: gain move
             - add armor move choice.move to moves
   bard:
-    in a sentence: A travelling performer who knows the stories of the land and tells of its heros
+    in a sentence: A charismatic and versatile performer who uses their music and wit to inspire their allies, manipulate their enemies, and cast powerful spells.
     introduction: >
       The poems say an adventurer’s life is all open roads and the glory of coin and combat.
       The tales told in every farmhand-filled inn have to have some ring of truth to them, don’t they?
-      The songs to inspire peasantry and royals alike—to soothe the savage beast or drive men to a frenzy—have to come from somewhere.\n
+      The songs to inspire peasantry and royals alike—to soothe the savage beast or drive men to a frenzy—have to come from somewhere.
       Enter the bard.
       You, with your smooth tongue and quick wit.
       You teller-of-tales and singer-of-songs.
@@ -2298,18 +2318,18 @@ playbooks:
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
   cleric:
-    in a sentence: A holy priest connected to a dety and wields their magic.
+    in a sentence: A faithful and divine agent who draws upon the power of their deity to heal their allies, smite their foes, and shape the world around them.
     introduction: >
       The lands of Dungeon World are a gods-forsaken mess.
       They’re lousy with the walking dead, beasts of all sorts, and the vast unnatural spaces between safe and temple-blessed civilizations.
       It is a godless world out there.
-      That’s why it needs you. \n
+      That’s why it needs you. 
       Bringing the glory of your god to the heathens isn’t just in your nature—it’s your calling.
       It falls to you to proselytize with sword and mace and spell.
       To cleave deep into the witless heart of the wilds and plant the seed of divinity there.
-      Some say that it is best to keep god close to your heart. \n
+      Some say that it is best to keep god close to your heart. 
       You know that’s rubbish.
-      God lives at the edge of a blade. \n
+      God lives at the edge of a blade. 
       Show the world who is lord.
     name options: [Durga, Aelfar, Gerda, Rurgosh, Bjorn, Drummond, Helga, Siggrun, Freya, Wesley, Brinton, Jon, Sara, Hawthorn, Elise, Clarke, Lenore, Piotr, Dahlia, Carmine]
     look options:
@@ -2557,15 +2577,15 @@ playbooks:
         type: advanced
         text: Get one move from another class. Treat your level as one lower for choosing the move.
   druid:
-    in a sentence: A person connected to nature that shapeshift into animals.
+    in a sentence: A shapeshifting nature-wielder who has a deep connection with the natural world, can transform into powerful animals, and bend the forces of nature to their will.
     introduction: >
       Cast your eyes around the fire. What has brought you to these people, stinking of the dust and sweat of the city?
       Perhaps it is a kindness—do you protect them as the mother bear watches over her cubs? Are they your pack, now?
-      Strange brothers and sisters you have. Whatever your inspiration, they would certainly fail without your sharp senses and sharper claws.\n
+      Strange brothers and sisters you have. Whatever your inspiration, they would certainly fail without your sharp senses and sharper claws.
       You are of the sacred spaces; you are born of soil and wear the marks of her spirits on your skin.
       You may have had a life before, maybe you were a city dweller like them, but not now.
       You’ve given up that static shape. Listen to your allies pray to their carved stone gods and polish their silver shells.
-      They speak of the glory they’ll find back in that festering town you left behind.\n
+      They speak of the glory they’ll find back in that festering town you left behind.
       Their gods are children, their steel is false protection.
       You walk the old ways, you wear the pelts of the earth itself.
       You’ll take your share of the treasure, but will you ever walk as one of them?
@@ -2722,16 +2742,16 @@ playbooks:
         type: advanced
         text: When you are under open skies when the sun rises the GM will ask you what the weather will be that day. Tell them whatever you like, it comes to pass.
   fighter:
-    in a sentence: A worrior connected to a mighty weapon
+    in a sentence: A skilled and stalwart warrior who excels in combat, can withstand and deal heavy damage, and has a wide range of maneuvers and abilities.
     introduction: >
       It’s a thankless job—living day to day by your armor and the skill of your arm.
       To dive heedlessly into danger. They won’t be playing golden horns for the time you took that knife to the ribs for them in the bar in Bucksberg.
-      No flock of angels to sing of the time you dragged them, still screaming, from the edge of the Pits of Madness, no.\n
-      Forget them.\n
+      No flock of angels to sing of the time you dragged them, still screaming, from the edge of the Pits of Madness, no.
+      Forget them.
       You do this for the guts and the glory.
       The scream of battle and the hot, hot blood of it.
       You are a beast of iron. Your friends may carry blades of forged steel but, fighter, you are steel.
-      While your traveling companions might moan about their wounds over a campfire in the wilderness, you bear your scars with pride.\n
+      While your traveling companions might moan about their wounds over a campfire in the wilderness, you bear your scars with pride.
       You are the wall—let every danger smash itself to nothing on you. In the end, you’ll be the last one standing.
     name options: [Ozruk, Surtur, Brunhilda, Annika, Janos, Greta, Dim, Rundrig, Jarl, Xotoq, Elohiir, Sharaseth, Hasrith, Shevaral, Cadeus, Eldar, Kithracet, Thelian, Finnegan, Olive, Randolph, Bartleby, Aubrey, Baldwin, Becca, Hawke, Rudiger, Gregor, Brianne, Walton, Castor, Shanna, Ajax, Hob]
     look options:
@@ -2900,7 +2920,7 @@ playbooks:
         type: advanced
         text: When you hack and slash on a 12+ you deal your damage, avoid their attack, and impress, dismay, or frighten your enemy.
   immolator:
-    in a sentence: A caster of fire
+    in a sentence: A fiery and volatile character who can summon and control flames, make deals with supernatural entities, and harness their own self-destructive tendencies as a weapon.
     introduction: >
       The fire burns within you.
     name options: [Solomon, Timothy, Kalil, Omen, Yohn, Hiko, Agasha, Elizabeth, Harald, Fatia, Khalwa, Adur, Ignis, Yajna, Umlilo, Sulfurheart, Flamewalker, Emberlash, Cinderclaw, Charfiend, Bittertallow, Barrowblaze, Singescale, Candlewick, Coalfang]
@@ -3009,7 +3029,7 @@ playbooks:
         type: advanced
         text: When you open a channel to the burning planes and call a firestorm, tell the GM what you’re sacrificing and roll+WIS. The sky opens up and fire pours like rain from it within an area about equal to a small village. Everyone and everything in the area takes damage as appropriate. On a 10+ you can extinguish the storm with a little effort. On a 7-9 the fires rage out of your control, spreading and gusting where they are carried by wind and weather. On a miss, something cruel, intelligent and hungry comes with the storm.
   paladin:
-    in a sentence: A holy fighter trying on a holy quest
+    in a sentence: A virtuous and righteous warrior who is devoted to a noble cause, has a divine mandate to smite evil, and can call upon powerful blessings and miracles from their deity.
     introduction: >
       Hell awaits.
       An eternity of torment in fire or ice or whatever best suits the sins of the damned throngs of Dungeon World.
@@ -3017,12 +3037,12 @@ playbooks:
       Holy man, armored war machine, templar of the Good and the Light, right?
       The cleric may say his prayers at night to the gods, dwelling in their heavens.
       The fighter may wield his sharp sword in the name of “good” but you know.
-      Only you.\n
+      Only you.
       Eyes, hands, and sweet killing blow of the gods, you are.
       Yours is the gift of righteousness and virtue. Of justice.
       Vision, too.
-      A purity of intent that your companions do not have.\n
-      So guide these fools, paladin. Take up your holy cause and bring salvation to the wastrel world.\n
+      A purity of intent that your companions do not have.
+      So guide these fools, paladin. Take up your holy cause and bring salvation to the wastrel world.
       Vae victis, right?
     name options: [Thaddeus, Augustine, Lux, Cassius, Hadrian, Lucia, Octavia, Regulus, Valeria, Sanguinus, Titanius]
     look options:
@@ -3169,15 +3189,15 @@ playbooks:
         replaces: Holy Protection
         text: When you quest you choose three boons instead of two.
   ranger:
-    in a sentence: A hunter and traveller connected to an animal companion
+    in a sentence: A skilled tracker and hunter who has a deep connection with the wilderness, can fight with deadly precision and agility, and has a loyal animal companion by their side.
     introduction: >
       These city-born folk you travel with.
       Have they heard the call of the wolf? Felt the winds howl in the bleak deserts of the East?
       Have they hunted their prey with the bow and the knife like you?
-      Hell no. That’s why they need you.\n
+      Hell no. That’s why they need you.
       Guide. Hunter. Creature of the wilds. You are these things and more.
       Your time in the wilderness may have been solitary until now, but the call of some greater thing—call it fate if you like—has cast your lot with these folk.
-      Brave, they may be. Powerful and strong, too. You know the secrets of the spaces between, though.\n
+      Brave, they may be. Powerful and strong, too. You know the secrets of the spaces between, though.
       Without you, they’d be lost. Blaze a trail through the blood and dark, strider.
     name options: [Throndir, Elrosine, Aranwe, Celion, Dambrath, Lanethe, Jonah, Halek, Brandon, Emory, Shrike, Nora, Diana]
     look options:
@@ -3334,16 +3354,16 @@ playbooks:
         type: advanced
         text: Your animal companion is a monster, not an animal. Describe it. Give it +2 ferocity and +1 instinct, plus a new training.
   thief:
-    in a sentence: A person of stealth, uses poisons and sneaking to get by.
+    in a sentence: A person of cunning and versatile rogue who excels at sneaking, picking locks, and dealing precise and deadly strikes from the shadows.
     introduction: >
       You’ve heard them, sitting around the campfire.
       Bragging about this battle or that.
       About how their gods are smiling on your merry band.
       You count your coins and smile to yourself—this is the thrill above all.
-      You alone know the secret of Dungeon World—filthy filthy lucre.\n
+      You alone know the secret of Dungeon World—filthy filthy lucre.
       Sure, they give you lip for all the times you’ve snuck off alone but without you,
       who among them wouldn’t have been dissected by a flying guillotine or poisoned straight to death by some ancient needle trap?
-      So, let them complain. When you’re done with all this delving you’ll toast their hero’s graves.\n
+      So, let them complain. When you’re done with all this delving you’ll toast their hero’s graves.
       From your castle. Full of gold. You rogue.
     name options: [Felix, Rook, Mouse, Sketch, Trixie, Robin, Omar, Brynn, Bug, Sparrow, Shank, Jack, Marlow, Dodge, Rat, Pox, Humble, Farley]
     look options:
@@ -3358,6 +3378,7 @@ playbooks:
         move:
           name: Halfling
           text: When you attack with a ranged weapon, deal +2 damage.
+          trigger: intstant
       - name: Human
         move:
           name: Human
@@ -3501,17 +3522,17 @@ playbooks:
             * Who will come after it?
             * Who else wants it?
   wizard:
-    in a sentence: A well educated spell caster
+    in a sentence: A master of arcane knowledge and power who can cast a wide variety of spells, manipulate reality to their will, and uncover secrets of the past and future.
     introduction: >
       Dungeon World has rules. Not the laws of men or the rule of some petty tyrant.
-      Bigger, better rules. You drop something—it falls. You can’t make something out of nothing. The dead stay dead, right?\n
-      Oh, the things we tell ourselves to feel better about the long, dark nights.\n
+      Bigger, better rules. You drop something—it falls. You can’t make something out of nothing. The dead stay dead, right?
+      Oh, the things we tell ourselves to feel better about the long, dark nights.
       You’ve spent so very long poring over those tomes of yours.
       The experiments that nearly drove you mad and all the botched summonings that endangered your very soul. For what?
       For power. What else is there?
       Not just the power of King or Country but the power to boil a man’s blood in his veins.
-      To call on the thunder of the sky and the churn of the roiling earth. To shrug off the rules the world holds so dear.\n
-      Let them cast their sidelong glances. Let them call you “warlock” or “diabolist.” Who among them can hurl fireballs from their eyes?\n
+      To call on the thunder of the sky and the churn of the roiling earth. To shrug off the rules the world holds so dear.
+      Let them cast their sidelong glances. Let them call you “warlock” or “diabolist.” Who among them can hurl fireballs from their eyes?
       Yeah. We didn’t think so.
     name options: [Galadiir, Fenfaril, Lilliastre, Phirosalle, Enkirash, Halwyr, Avon, Morgan, Rath, Ysolde, Ovid, Vitus, Aldara, Xeno, Uri]
     look options:
